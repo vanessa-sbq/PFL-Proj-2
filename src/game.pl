@@ -4,6 +4,7 @@
 :- include('./board.pl').
 :- use_module(library(random)).
 :- use_module(library(lists)).
+:- use_module(library(between)).
 
 play :- cls,
         displayMenu,

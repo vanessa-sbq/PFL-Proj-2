@@ -101,34 +101,59 @@ get_element(Board, I, J, Color) :-
 /*
     Returns the adjacent position, given an I and a J
 */
-adjacent(I, J, NI, Y) :- NI is I - 1, NI >= 0. % Up
-adjacent(I, J, NI, Y) :- NI is I + 1.          % Down
-adjacent(I, J, I, NJ) :- NJ is J - 1, NJ >= 0. % Left
-adjacent(I, J, I, NJ) :- NJ is J + 1.          % Right
+adjacent(I, J, NI, NJ) :- NI is I - 1, NJ is J, NI >= 0.  % Up
+adjacent(I, J, NI, NJ) :- NI is I + 1, NJ is J.           % Down
+adjacent(I, J, NI, NJ) :- NI is I, NJ is J - 1, NJ >= 0.  % Left
+adjacent(I, J, NI, NJ) :- NI is I, NJ is J + 1.           % Right
 
 /*
-    Iterate over Board and store maximum value. 
+    Iterate over Board and store maximum value.
 */
-% get_max_value(+Board, +Color, +Visited, -MaxValue)
+% get_max_value(+Board, +Color, +Visited, +CurrentMax, -MaxValue)
+get_max_value(Board, Color, Visited, CurrentMax, MaxValue) :-
+    length(Board, NumRows),
+    nth1(1, Board, Row), length(Row, NumCols),
+    findall((I, J), (between(1, NumRows, I), between(1, NumCols, J)), Cells),
+    get_max_value_helper(Board, Color, Cells, Visited, CurrentMax, MaxValue).
+
+/*
+    Helper function.
+    Recursive function to get the maximum size of a color's components.
+*/
+get_max_value_helper(_, _, [], _, MaxValue, MaxValue) :- !.
+get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, MaxValue) :-
+    \+ member((I, J), Visited), % Check if the cell is not visited
+    get_element(Board, I, J, Color), % Check if the cell matches the specified color
+    get_component_value(Board, Color, Visited, I, J, 0, ComponentValue), % Get the size of the component
+    NewMax is max(CurrentMax, ComponentValue), % Update the maximum value
+    append([(I, J)], Visited, NewVisited), % Mark the current cell as visited
+    get_max_value_helper(Board, Color, RestCells, NewVisited, NewMax, MaxValue).
+get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, MaxValue) :-
+    (member((I, J), Visited); \+ get_element(Board, I, J, Color)), % Skip invalid cells
+    get_max_value_helper(Board, Color, RestCells, Visited, CurrentMax, MaxValue).
 
 /*
     Get a value of a component.
 */
 % get_component_value(+Board, +Color, +Visited, +I, +J, -Value)
 get_component_value(Board, Color, Visited, I, J, Acc, Value) :-
-        findall((NI, NJ), (adjacent(I, J, NI, NJ), get_element(Board, NI, NJ, Value), \+ member((NI, NJ), Visited)), Neighbors), % Find the neighbors of the element in position (I, J)
-        Acc1 is Acc + 1,
-        append([(I, J)], Visited, Visited1),
-        get_component_value_helper(Board, Color, Neighbors, Visited1, Acc1, Value).
-        %write(Neighbors).
+    findall((NI, NJ), 
+            (adjacent(I, J, NI, NJ), 
+             get_element(Board, NI, NJ, ColorOfElem), 
+             \+ member((NI, NJ), Visited), 
+             ColorOfElem == Color), 
+            Neighbors), % Find the neighbors of the element in position (I, J)
+    Acc1 is Acc + 1,
+    append([(I, J)], Visited, Visited1),
+    get_component_value_helper(Board, Color, Neighbors, Visited1, Acc1, Value).
 
 get_component_value_helper(_, _, [], _, Acc, Acc) :- !.
-get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Value):-
-        \+ member((NI, NJ), Visited),
-        get_component_value(Board, Color, Visited, NI, NJ, Acc, Value),
-        get_component_value_helper(Board, Color, RestNeigh, Visited, Acc, Value).
-get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Value):-
-        get_component_value_helper(Board, Color, RestNeigh, Visited, Acc, Value).
+get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Value) :-
+    \+ member((NI, NJ), Visited),
+    get_component_value(Board, Color, Visited, NI, NJ, Acc, Value1),
+    get_component_value_helper(Board, Color, RestNeigh, [ (NI, NJ) | Visited ], Value1, Value), !.
+get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
+    get_component_value_helper(Board, Color, RestNeigh, Visited, Acc, Value).
 
 
 /*
@@ -140,11 +165,14 @@ get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Val
      [[null,0],[null,0]]
 
     [[null,0,null,null],[0,0,0,null],[null,0,null,null],[null,null,null,null]] Connected components are (0,1)(1,0)(1,1)(1,2)(2,1)
+
+    [[null,0   ,null,null],[0   ,0   ,null,null],[null,null,null,0   ],[null   ,null   ,null   ,null   ]]
+
+    [[null,0   ,null,null],[0   ,0   ,null,null],[null,0 ,null,0   ],[0   ,0   ,0   ,0   ]]
+
+    findall((NI, NJ), (adjacent(2, 1, NI, NJ), get_element([[null,0   ,null,null],[0   ,0   ,null,null],[null,null,null,0   ],[0   ,0   ,0   ,0   ]], NI, NJ, ColorOfElem), \+ member((NI, NJ), []), ColorOfElem == 0), Neighbors)
+    [(1,1)]
 */
-% 
-% get_
-
-
 
 % check_max_marbles() :- 
 
