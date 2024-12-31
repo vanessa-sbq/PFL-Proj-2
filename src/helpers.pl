@@ -39,6 +39,11 @@ replace([H|T], Index, Old, New, Res) :- Index > 0,
                                         replace(T, Index1, Old, New, NewTail), !,
                                         Res = [H|NewTail].
 
+replace_first_last([_|T], A, B, [A|NewList]) :- replace_last(T, B, NewList).
+
+replace_last([X], B, [B]) :- !.
+replace_last([H|T], B, [H|NewList]) :- replace_last(T, B, NewList).
+
 partitionListHelper(0, NewList, NewList, []) :- !.
 partitionListHelper(PartitionSize, [H|T], NewList, NewParttion) :- PartitionSize > 0,
                                                                    PartitionSize1 is PartitionSize - 1,
@@ -56,3 +61,7 @@ popFromList([H|T], T).
 
 sw_bool_value(true, false).
 sw_bool_value(false, true).
+
+% Check if all elements of a list are null
+all_null([]).
+all_null([null | Rest]) :- all_null(Rest).

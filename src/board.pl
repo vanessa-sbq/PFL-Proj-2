@@ -10,41 +10,54 @@
     After replicate our board looks like:
     [[], [], [], [], [], [], [], []]
 */
-construct_board(Board) :- replicate(8, null, Row),
-                          replicate(8,Row,Board),
-                          repeat,
-                          generateList(0, Res, true),
-                          validatePieces(Res), 
-                          partitionList(Res, 4, 6, BoardSides),
-                          placeInitialPieces(Board, BoardSides, FilledBoard), !,
-                          write(FilledBoard), nl. % TODO: Remove Debug
+construct_board(FilledBoard) :- replicate(8, null, Row),
+                                replicate(8,Row,Board),
+                                repeat,
+                                generateList(0, Res, true),
+                                validatePieces(Res), 
+                                partitionList(Res, 4, 6, BoardSides),
+                                placeInitialPieces(Board, BoardSides, FilledBoard), !.
+                          %write(FilledBoard), nl. % TODO: Remove Debug
 
-/*
+
+
+/* % TODO: Remove
+[[null,1,1,0,1,0,1,null],
+[0,null,null,null,null,null,null,0],
+[1,null,null,null,null,null,null,0],
+[0,null,null,null,null,null,null,1],
+[0,null,null,null,null,null,null,0],
+[1,null,null,null,null,null,null,1],
+[0,null,null,null,null,null,null,0],
+[null,1,1,0,1,0,1,null]]
+
+DEBUG: Game ended
 [[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]]
+
+DEBUG: Left side empty
+[[null,1,1,0,1,0,1,null],[null,null,null,null,null,null,null,0],[null,null,null,null,null,null,null,0],[null,null,null,null,null,null,null,1],[null,null,null,null,null,null,null,0],[null,null,null,null,null,null,null,1],[null,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+
+FOR DEBUG:
+[[null,1,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
 */
 
-constrctRight(List, Element, NewList) :- length(List, Size),
-                                         Size1 is Size - 1,
-                                         replace(List, Size1, null, Element, NewList).
 
-fillRight(MaxSize, MaxSize, _, _, []) :- !.
-fillRight(Idx, MaxSize, [RH|RT], [H|T], NewBoard) :- Idx1 is Idx + 1,
-                                                     fillRight(Idx1, MaxSize, RT, [H|T], NewBoardTail),           
-                                                     constrctRight(H, RH, NewList), NewBoard = [NewList|NewBoardTail].
+fillSides(MaxSize, MaxSize, _, _, _, []) :- !.
+fillSides(Idx, MaxSize, [RH|RT], [LH|LT], [H|T], NewBoard) :- Idx1 is Idx + 1,
+                                                              fillSides(Idx1, MaxSize, RT, LT, [H|T], NewBoardTail),           
+                                                              replace_first_last(H, LH, RH, NewList),
+                                                              NewBoard = [NewList|NewBoardTail].
 
-%fillBottom(Bottom, FilledBoard) :-
-%fillLeft(Left, FilledBoard) :-
-%a :- placeInitialPieces([[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null]], [[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1],[1,1,1,1,1,1]], FilledBoardA), write(FilledBoardA). % TODO:FIXME: remove.
-
-placeInitialPieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- append([null|Top], [null], TopSlice), % Fill top half of Mabula board.
-                                                                           length(Board, BoardSize), % Board is a square
-                                                                           ElementToDelete is BoardSize - 1, % Delete the last element so we only work with the middle part.
+placeInitialPieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- append([null|Top], [null], TopSlice),                                                                            % Fill top half of Mabula board.
+                                                                           length(Board, BoardSize),                                                                                        % Board is a square
+                                                                           ElementToDelete is BoardSize - 1,                                                                                % Delete the last element so we only work with the middle part.
                                                                            delete_elem(ElementToDelete, Board, [null,null,null,null,null,null,null,null], [NewBoardHead | NewBoardMiddle]), % Continuation of upper line (Actually removes the element)
-                                                                           length(NewBoardMiddle, BoardMiddleSize), % Calculate how many lists are in the middle.
-                                                                           fillRight(0, BoardMiddleSize, Right, NewBoardMiddle, FilledBoardMiddle), % Fill the right side of the Mabula board.
-                                                                           append([TopSlice|FilledBoardMiddle], [[null,null,null,null,null,null,null,null]], FilledBoard). % FIXME: Temporary, remove, left and down are not complete.
-                                                                           %fillBottom(Bottom, FilledBoard),
-                                                                           %fillLeft(Left, FilledBoard).
+                                                                           length(NewBoardMiddle, BoardMiddleSize),
+                                                                           reverse(Left, LeftReversed),                                                                          % Calculate how many lists are in the middle.
+                                                                           fillSides(0, BoardMiddleSize, Right, LeftReversed, NewBoardMiddle, FilledBoardMiddle),                                   % Fill the right side of the Mabula board.
+                                                                           append([null|Bottom], [null], BottomHalfTemp),
+                                                                           reverse(BottomHalfTemp, BottomHalf),                                                                       % Fill bottom half of Mabula board.
+                                                                           append([TopSlice|FilledBoardMiddle], [BottomHalf], FilledBoard).                                                   % Return the filled Mabula board.
                                                                            
 
 /*
@@ -58,10 +71,12 @@ placeInitialPieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- appen
         This function recursively goes down the list and counts only white pieces.
         It's deterministic in the sense that if more than 12 pieces are found the function returns no.
 */
-validateWhites([], 12).
+validateWhites([], 12) :- !.
+validateWhites([], NumWhitePieces) :- NumWhitePieces =\= 12, !, fail.
 validateWhites([Piece | T], NumWhitePieces) :- Piece =:= 1, 
                                                NumWhitePieces1 is NumWhitePieces + 1, 
                                                validateWhites(T, NumWhitePieces1);
+                                               Piece =:= 0,
                                                validateWhites(T, NumWhitePieces).
 
 /*
@@ -75,10 +90,12 @@ validateWhites([Piece | T], NumWhitePieces) :- Piece =:= 1,
         This function recursively goes down the list and counts only black pieces.
         It's deterministic in the sense that if more than 12 pieces are found the function returns no.
 */
-validateBlacks([], 12).
+validateBlacks([], 12) :- !.
+validateBlacks([], NumBlackPieces) :- NumBlackPieces =\= 12, !, fail.
 validateBlacks([Piece | T], NumBlackPieces) :- Piece =:= 0, 
                                                NumBlackPieces1 is NumBlackPieces + 1, 
                                                validateBlacks(T, NumBlackPieces1);
+                                               Piece =:= 1,
                                                validateBlacks(T, NumBlackPieces).
 
 /*
@@ -91,7 +108,7 @@ validateBlacks([Piece | T], NumBlackPieces) :- Piece =:= 0,
                            The same is verified if the last two elements are the same.
 */
 checkLastLink([H1, H2 | Tail]) :- list_nth(23, [H1, H2 | Tail], Last), ((H1 =\= H2);(H1 =:= H2, H1 =\= Last, H2 =\= Last)),
-                   list_nth(23, [H1, H2 | Tail], SencondLast), ((Last =\= SencondLast);(Last =:= SencondLast, H1 =\= Last)).
+                   list_nth(22, [H1, H2 | Tail], SencondLast), ((Last =\= SencondLast);(Last =:= SencondLast, H1 =\= Last)).
 
 /*
     Wrapper Function.
@@ -145,25 +162,33 @@ display_row_line(M) :-
     Helper function.
     Draws the fields where the player can place a marble.
 */
-display_row_empty(0) :- write('|'), nl, !.
-display_row_empty(M) :- 
-            write('|   '),
-            M1 is M-1,
-            display_row_empty(M1).
+display_row_empty(0, _) :- write('|'), nl, !.
+display_row_empty(M, [1|RT]) :- write('| W '),
+                                M1 is M-1,
+                                display_row_empty(M1, RT).
+display_row_empty(M, [0|RT]) :- write('| B '),
+                                M1 is M-1,
+                                display_row_empty(M1, RT).
+display_row_empty(M, [null|RT]) :- write('|   '),
+                                M1 is M-1,
+                                display_row_empty(M1, RT).
 
 /*
     Helper function.
     Draws the rows of the board.
 */
-display_row(M) :-
+display_row(M, Row) :-
             display_row_line(M),
-            display_row_empty(M), !.
+            display_row_empty(M, Row), !.
 
 /*
     Draws the board on the screen.
 */
-display_board(0, M) :- display_row_line(M), nl, !.
-display_board(N, M) :-
-            display_row(M),
+display_board(0, M, []) :- display_row_line(M), nl, !.
+display_board(N, M, [Row|Rows]) :-
+            display_row(M, Row),
             N1 is N-1,
-            display_board(N1, M).
+            display_board(N1, M, Rows).
+
+
+%move() :-
