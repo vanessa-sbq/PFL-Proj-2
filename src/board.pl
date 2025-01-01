@@ -174,21 +174,45 @@ display_row_empty(M, [null|RT]) :- write('|   '),
                                 display_row_empty(M1, RT).
 
 /*
+    Displays the column numbers
+*/
+display_col_numbers(MaxCol, MaxCol) :- !.
+display_col_numbers(M, MaxCol) :-
+            M1 is M + 1 ,
+            write('   '),
+            write(M1),
+            display_col_numbers(M1, MaxCol).
+
+/*
+    Displays the number of each row
+*/
+display_row_number(0) :- !.
+display_row_number(N) :- write(N).
+
+/*
     Helper function.
     Draws the rows of the board.
 */
-display_row(M, Row) :-
+display_row(N, M, Row) :-
+            write(' '),
             display_row_line(M),
+            display_row_number(N),
             display_row_empty(M, Row), !.
 
 /*
     Draws the board on the screen.
 */
-display_board(0, M, []) :- display_row_line(M), nl, !.
 display_board(N, M, [Row|Rows]) :-
-            display_row(M, Row),
+            display_col_numbers(0, M), nl,
+            display_board_cells(N, M, [Row|Rows]).
+
+display_board_cells(0, M, []) :- 
+            write(' '), 
+            display_row_line(M), nl, !.
+display_board_cells(N, M, [Row|Rows]) :-
             N1 is N-1,
-            display_board(N1, M, Rows).
+            display_row(N, M, Row),
+            display_board_cells(N1, M, Rows).
 
 
 %move() :-
