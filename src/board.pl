@@ -215,4 +215,12 @@ display_board_cells(N, M, [Row|Rows]) :-
             display_board_cells(N1, M, Rows).
 
 
+/*
+    translate_coords(?DisplayCoordsI, ?DisplayCoordsJ, ?MatrixCoordsI, ?MatrixCoordsJ, +Rows, +Cols)
+    Translates between displayed coordinates and the coordinates we use in the matrix.
+*/
+translate_coords(DisplayCoordsI, DisplayCoordsJ, MatrixCoordsI, MatrixCoordsJ, Rows, Cols) :-
+    MatrixCoordsI is Rows - DisplayCoordsJ,
+    MatrixCoordsJ is DisplayCoordsI - 1.
+
 %move() :-
