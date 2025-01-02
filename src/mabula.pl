@@ -226,13 +226,37 @@ moveRowPieces(Board, RowIndex, InitialIndex, DistanceToTravel, NewRow) :- nth0(R
     [[null,null,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,0],[0,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
 */
 
-% Moves from the top slice originate from index 0
-%TODO: Finish
+% Moves from the top slice originate from index 0.
 applyMove(0-OldJ-Distance, Board, NewBoard) :- transpose(Board, Columns),
                                                moveRowPieces(Columns, OldJ, 0, Distance, NewRow),
                                                nth0(OldJ, Columns, OldRow),
                                                replace(Columns, OldJ, OldRow, NewRow, CascadedColumns),
-                                               transpose(CascadedColumns, NewBoard), print(NewBoard).
+                                               transpose(CascadedColumns, NewBoard). %, print(NewBoard). %TODO: remove
+
+% Moves from the bottom slice originate from max index.
+applyMove(MaxIndex-OldJ-Distance, Board, NewBoard) :- length(Board, BoardSize),
+                                                      MaxIndex is BoardSize - 1,
+                                                      reverse(Board, UpsideDownBoard),
+                                                      transpose(UpsideDownBoard, Columns),
+                                                      moveRowPieces(Columns, OldJ, 0, Distance, NewRow),
+                                                      nth0(OldJ, Columns, OldRow),
+                                                      replace(Columns, OldJ, OldRow, NewRow, CascadedColumns),
+                                                      transpose(CascadedColumns, NewUpsideDownBoard),
+                                                      reverse(NewUpsideDownBoard, NewBoard). %, print(NewBoard). %TODO: remove
+
+% Moves from the left slice originate from row index 0.
+applyMove(MiddleSliceIndex-0-Distance, Board, NewBoard) :- length(Board, BoardSize),
+                                                           moveRowPieces(Board, MiddleSliceIndex, 0, Distance, NewRow),
+                                                           nth0(MiddleSliceIndex, Board, OldRow),
+                                                           replace(Board, MiddleSliceIndex, OldRow, NewRow, NewBoard). %, print(NewBoard). %TODO: remove
+
+% Moves from the right slice originate from max row index.
+applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, BoardSize),
+                                                                  reverseColumns(Board, BoardRowReversed),
+                                                                  moveRowPieces(BoardRowReversed, MiddleSliceIndex, 0, Distance, NewRow),
+                                                                  nth0(MiddleSliceIndex, BoardRowReversed, OldRow),
+                                                                  replace(BoardRowReversed, MiddleSliceIndex, OldRow, NewRow, NewBoardRowReversed),
+                                                                  reverseColumns(NewBoardRowReversed, NewBoard). %, print(NewBoard). %TODO: remove
 
 %FIXME: Fix move ?
 move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Player-Color, PossibleMoves),
