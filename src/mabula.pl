@@ -174,6 +174,71 @@ get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
     [(1,1)]
 */
 
+% Push the next piece if it exists
+pushNextPiece(Row, _, null, Row). % Stop if the target position is empty (null)
+pushNextPiece(Row, TargetIndex, NextPiece, NewRow) :- NextTarget is TargetIndex + 1,          % Determine the next target position
+                                                      pushPieces(Row, NextTarget, NextPiece, NewRow). % Recursively push the next piece
+
+% Push pieces starting from TargetIndex
+pushPieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece),  % Get the current piece at TargetIndex
+                                               replace(Row, TargetIndex, NextPiece, Piece, TempRow), % Place the new piece at TargetIndex
+                                               pushNextPiece(TempRow, TargetIndex, NextPiece, NewRow).
+
+% Move a piece in a row, pushing other pieces if necessary
+movePiece(Row, CurrentIndex, 0, Row).
+movePiece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + Distance,
+                                                  nth0(CurrentIndex, Row, Piece), % Get the piece at CurrentIndex
+                                                  Piece \= null,                  % Ensure we are moving a valid piece
+                                                  pushPieces(Row, TargetIndex, Piece, TempNewRow), % Push pieces as needed
+                                                  replace(TempNewRow, CurrentIndex, Piece, null, NewRow).
+
+
+moveRowPieces(Board, RowIndex, InitialIndex, 0, NewRow) :- nth0(RowIndex, Board, RowToEdit),
+                                                           movePiece(RowToEdit, InitialIndex, 0, NewRow).
+moveRowPieces(Board, RowIndex, InitialIndex, DistanceToTravel, NewRow) :- nth0(RowIndex, Board, RowToEdit),
+                                                            movePiece(RowToEdit, InitialIndex, 1, TempRow), % We want to move piece with index 0 to index Distance.         
+                                                            NextDistanceToTravel is DistanceToTravel - 1,
+                                                            NextIndex is InitialIndex + 1,
+                                                            replace(Board, RowIndex, RowToEdit, TempRow, NewBoard),
+                                                            moveRowPieces(NewBoard, RowIndex, NextIndex, NextDistanceToTravel, NewRow), !.
+
+/*
+    DEBUG: Remove
+
+    % Example where the first move if from top to bottom, moves 6 cases.
+    applyMove(0-1-6, [[null,1,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]], N).
+    Result = [[null,null,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+
+    For move 0-1-5
+
+    Initial
+    [[null,1,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+
+    Final
+    [[null,null,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+
+    For move 0-1-1
+
+    Initial
+    [[null,1,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,0],[0,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+
+    Final
+    [[null,null,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,0],[0,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
+*/
+
+% Moves from the top slice originate from index 0
+%TODO: Finish
+applyMove(0-OldJ-Distance, Board, NewBoard) :- transpose(Board, Columns),
+                                               moveRowPieces(Columns, OldJ, 0, Distance, NewRow),
+                                               nth0(OldJ, Columns, OldRow),
+                                               replace(Columns, OldJ, OldRow, NewRow, CascadedColumns),
+                                               transpose(CascadedColumns, NewBoard), print(NewBoard).
+
+%FIXME: Fix move ?
+move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Player-Color, PossibleMoves),
+                                                          moveRowPieces(OldI-OldJ-Distance, PossibleMoves),
+                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard).
+
 % check_max_marbles() :- 
 
 % initial_state() :-
