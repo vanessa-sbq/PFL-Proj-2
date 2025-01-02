@@ -193,10 +193,10 @@ get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
             - No marble is pushed off the edge
 */
 valid_moves(Board-Color, ListOfMoves) :-
-    get_edge_marbles(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos),
-    get_all_edge_moves(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves),
+    get_edge_marbles(Board, Color, EdgeMarblesPos),
+    get_all_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves),
     write(AllEdgeMoves). % TODO: Remove (DEBUG)
-    get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ListOfMoves).
+    %get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ListOfMoves).
 
 
 move(Board, Move, NewBoard) :- true. % TODO: Remove (DEBUG) placeholder
@@ -210,56 +210,27 @@ get_valid_edge_moves(Board, Color, [_ | RestMoves], ValidMoves) :-
     get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
 
 
-get_all_edge_moves(Board, CurrentPlayer, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves) :-
+get_all_edge_moves(Board, CurrentPlayer, EdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
-    get_all_top_edge_moves(N, TopEdgeMarblesPos, AllTopEdgeMoves),
-    get_all_right_edge_moves(N, RightEdgeMarblesPos, AllRightEdgeMoves),
-    get_all_bottom_edge_moves(N, BottomEdgeMarblesPos, AllBottomEdgeMoves),
-    get_all_left_edge_moves(N, LeftEdgeMarblesPos, AllLeftEdgeMoves),
-    append(AllTopEdgeMoves, AllRightEdgeMoves, TempMoves1),
-    append(TempMoves1, AllBottomEdgeMoves, TempMoves2),     
-    append(TempMoves2, AllLeftEdgeMoves, AllEdgeMoves).     
+    get_all_edge_moves(N, EdgeMarblesPos, AllEdgeMoves).    
 
-% Helper predicate to generate all moves for a single marble position along the top edge
-generate_top_moves(N, (I, J), Moves) :-
-    findall((I, J)-(NewI, J), (between(1, N, NewI), NewI > I), Moves).
-
-get_all_top_edge_moves(N, TopEdgeMarblesPos, AllTopEdgeMoves) :-
-    MaxJ is N-2,
-    findall(Move, (member(Pos, TopEdgeMarblesPos), generate_top_moves(MaxJ, Pos, Moves), member(Move, Moves)), AllTopEdgeMoves).
-
-% Helper predicate to generate all moves for a single marble position along the right edge
-generate_right_moves(N, (I, J), Moves) :-
-    findall((I, J)-(I, NewJ), (between(1, N, NewJ), NewJ < J), Moves).
-
-get_all_right_edge_moves(N, RightEdgeMarblesPos, AllRightEdgeMoves) :-
-    findall(Move, (member(Pos, RightEdgeMarblesPos), generate_right_moves(N, Pos, Moves), member(Move, Moves)), AllRightEdgeMoves).
-
-% Helper predicate to generate all moves for a single marble position along the bottom edge
-generate_bottom_moves(N, (I, J), Moves) :-
-    MaxN is N-1,
-    findall((I, J)-(NewI, J), (between(1, MaxN, NewI), NewI < I), Moves).
-
-get_all_bottom_edge_moves(N, BottomEdgeMarblesPos, AllBottomEdgeMoves) :-
-    findall(Move, (member(Pos, BottomEdgeMarblesPos), generate_bottom_moves(N, Pos, Moves), member(Move, Moves)), AllBottomEdgeMoves).
-
-% Helper predicate to generate all moves for a single marble position along the left edge
-generate_left_moves(N, (I, J), Moves) :-
+generate_moves(N, (I, J), Moves) :-
     MaxN is N-2,
-    findall((I, J)-(I, NewJ), (between(1, MaxN, NewJ), NewJ > J), Moves).
+    findall(I-J-Dist, between(1, MaxN, Dist), Moves).
 
-get_all_left_edge_moves(N, LeftEdgeMarblesPos, AllLeftEdgeMoves) :-
-    findall(Move, (member(Pos, LeftEdgeMarblesPos), generate_left_moves(N, Pos, Moves), member(Move, Moves)), AllLeftEdgeMoves).
-
+get_all_edge_moves(N, EdgeMarblesPos, AllEdgeMoves) :-
+    findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves),
+    write(AllEdgeMoves).
 /*
     Returns all edge marble positions for the current player.
 */
-get_edge_marbles(Board, CurrentPlayer, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos) :-
+get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
     edge_positions(Board, TopEdgePositions, RightEdgePositions, BottomEdgePositions, LeftEdgePositions),  % Get all top edge positions
     findall((Row, Col), (member((Row, Col), TopEdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), TopEdgeMarblesPos),
     findall((Row, Col), (member((Row, Col), RightEdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), RightEdgeMarblesPos),                     
     findall((Row, Col), (member((Row, Col), BottomEdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), BottomEdgeMarblesPos),                     
-    findall((Row, Col), (member((Row, Col), LeftEdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), LeftEdgeMarblesPos).                     
+    findall((Row, Col), (member((Row, Col), LeftEdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), LeftEdgeMarblesPos),
+    append([TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos], EdgeMarblesPos).                 
 
 /*
     Helper function.
