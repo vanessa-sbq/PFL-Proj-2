@@ -260,7 +260,7 @@ applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, 
 
 %FIXME: Fix move ?
 move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Player-Color, PossibleMoves),
-                                                          moveRowPieces(OldI-OldJ-Distance, PossibleMoves),
+                                                          member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard).
 
 % check_max_marbles() :- 

@@ -1,4 +1,4 @@
-:- include('./board.pl').
+:- include('./game.pl').
 
 /****************** Boards for testing *******************/
 board1([[null,1   ,1   ,0   ,1   ,0   ,1   ,null],
@@ -25,8 +25,8 @@ board3([[null,1   ,1   ,0   ,1   ,0   ,1   ,null],
         [0   ,null,null,null,null,null,null,1   ],
         [null,0   ,null,null,null,null,null,0   ],
         [1   ,null,null,null,null,null,null,1   ],
-        [0   ,null,null,null,null,null,null,0   ],
-        [null,1   ,1   ,0   ,1   ,0   ,1   ,null]]).
+        [0   ,1   ,null,null,null,null,null,0   ],
+        [null,null,1   ,0   ,1   ,0   ,1   ,null]]).
 
 % Printing the boards
 board1_before :- board1(Board), display_board(8, 8, Board).
