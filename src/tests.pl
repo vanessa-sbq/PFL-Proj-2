@@ -36,17 +36,27 @@ board3_before :- board3(Board), display_board(8, 8, Board).
 
 
 /********* All edge moves tests (including invalid) **********/    
+% Get all the valid moves for player 0
+valid_moves_test1 :- board1(Board),
+                     valid_moves(Board-0, ListOfMoves),
+                     write(ListOfMoves).
+
+% Get all the valid moves for player 0
+get_valid_edge_moves_test1 :- board1(Board),
+                              get_valid_edge_moves(Board, 0, [(0,3)-(1,3),(0,3)-(2,3)], ValidMoves),
+                              write(ValidMoves).
+
 % get_edge_marbles(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos)
 get_edge_marbles_test1 :- board1(Board),
-                         get_edge_marbles(Board, 0, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos),
-                         write('TopEdgeMarblesPos='),
-                         write(TopEdgeMarblesPos), nl,
-                         write('RightEdgeMarblesPos='),
-                         write(RightEdgeMarblesPos), nl, 
-                         write('BottomEdgeMarblesPos='),
-                         write(BottomEdgeMarblesPos), nl,
-                         write('LeftEdgeMarblesPos='),
-                         write(LeftEdgeMarblesPos).
+                          get_edge_marbles(Board, 0, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos),
+                          write('TopEdgeMarblesPos='),
+                          write(TopEdgeMarblesPos), nl,
+                          write('RightEdgeMarblesPos='),
+                          write(RightEdgeMarblesPos), nl, 
+                          write('BottomEdgeMarblesPos='),
+                          write(BottomEdgeMarblesPos), nl,
+                          write('LeftEdgeMarblesPos='),
+                          write(LeftEdgeMarblesPos).
 
 % get_all_edge_moves(Board, CurrentPlayer, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves) 
 get_all_edge_moves_test1 :- board1(Board),

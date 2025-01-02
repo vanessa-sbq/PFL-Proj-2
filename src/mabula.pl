@@ -194,9 +194,21 @@ get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
 */
 valid_moves(Board-Color, ListOfMoves) :-
     get_edge_marbles(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos),
-    get_all_edge_moves(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves).
-    %get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ValidEdgeMoves).
-    % TODO: For now this is just getting the edge moves
+    get_all_edge_moves(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves),
+    write(AllEdgeMoves). % TODO: Remove (DEBUG)
+    get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ListOfMoves).
+
+
+move(Board, Move, NewBoard) :- true. % TODO: Remove (DEBUG) placeholder
+
+get_valid_edge_moves(_, _, [], []). % No moves left
+get_valid_edge_moves(Board, Color, [Move | RestMoves], [Move | ValidMoves]) :-
+    move(Board, Move, NewBoard), % Simulate move
+    !, % Cut to stop backtracking on move success
+    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, Color, [_ | RestMoves], ValidMoves) :-
+    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
+
 
 get_all_edge_moves(Board, CurrentPlayer, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
