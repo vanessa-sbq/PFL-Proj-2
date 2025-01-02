@@ -219,8 +219,9 @@ display_board_cells(N, M, [Row|Rows]) :-
     translate_coords(?DisplayCoordsI, ?DisplayCoordsJ, ?MatrixCoordsI, ?MatrixCoordsJ, +Rows, +Cols)
     Translates between displayed coordinates and the coordinates we use in the matrix.
 */
+translate_coords(-1, -1, -1, -1, _, _).
 translate_coords(DisplayCoordsI, DisplayCoordsJ, MatrixCoordsI, MatrixCoordsJ, Rows, Cols) :-
-    MatrixCoordsI is Rows - DisplayCoordsJ,
-    MatrixCoordsJ is DisplayCoordsI - 1.
+    MatrixCoordsI is Rows - DisplayCoordsI,
+    MatrixCoordsJ is DisplayCoordsJ - 1.
 
 %move() :-

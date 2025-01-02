@@ -47,8 +47,8 @@ askForNames(P1_Name, P2_Name) :- repeat,
 
 display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
     cls,
-    display_board(8, 8, Board),
-    display_player_turn(CurrentPlayer, Color, Move).
+    display_board(8, 8, Board).%,
+    %display_player_turn(CurrentPlayer, Color, Move).
 
 display_player_turn(Player, Color, Row-Col-Dist) :-
     write(Player), write(', what marble do you want to push?'), nl, nl,
@@ -67,11 +67,14 @@ display_player_turn(Player, Color, Row-Col-Dist) :-
 %game_cycle(Board-P1-P2-Player-Color-Level) :- game_over(GameState, Winner), !,
 %                                              congratulate(Winner).
 game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
-game_cycle(Board-L1-L2-P1-P2-_-Color-Level):- %choose_move(GameState, Player, Move),
-                               %move(GameState, Move, NewGameState),
+game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
+                               repeat,
+                               choose_move(Board-Player-Color, Level, OldI-OldJ-Distance),
+                               length(Board, BoardSize),
+                               move(Board-Player-Color, NewI-NewJ-Distance, NewBoard),
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
-                               display_game(Board-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, % TODO: Use NewBoard when move implemented
-                               game_cycle(Board-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). % TODO: Use NewBoard when move implemented
+                               display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, % TODO: Use NewBoard when move implemented
+                               game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). % TODO: Use NewBoard when move implemented
 
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
 next_player(L1, L2, P1, P2, 1, 0-P1-L1).
@@ -359,11 +362,12 @@ choose_move(Board-Player-Color, 2, Move) :- valid_moves(Board-Color, PossibleMov
                                             get_best_move(Board-Color, PossibleMoves, Move), !.
 choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
                                                     write('Use -1 -1 -1 to skip this round.'),nl,
-                                                    format('~w, what marble do you want to push?', [Player]), nl,nl,
-                                                    write('Row of the marble: '), read(I), nl,
-                                                    write('Column of the marble: '), read(J), nl, nl,
+                                                    format('~w, what ~w marble do you want to push?', [Player, Color]), nl,nl,
+                                                    write('Row of the marble: '), read(OldI), nl,
+                                                    write('Column of the marble: '), read(OldJ), nl, nl,
                                                     write('How far do you want to push it?'), nl,nl,
-                                                    write('Number of squares to push the marble: '), read(Distance), nl, nl.
+                                                    write('Number of squares to push the marble: '), read(Distance), nl, nl,
+                                                    translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize),.
 
 /*
     valid_moves(+GameState, -ListOfMoves)

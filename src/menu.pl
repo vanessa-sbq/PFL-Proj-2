@@ -1,4 +1,4 @@
-cls :- write('\33\[2J').
+cls :- write('').
 
 displayMenu :- write('                                                 '), nl,
                write('8b    d8    db    88""Yb 88   88 88        db    '), nl,
