@@ -163,10 +163,10 @@ display_row_line(M) :-
     Draws the fields where the player can place a marble.
 */
 display_row_empty(0, _) :- write('|'), nl, !.
-display_row_empty(M, [1|RT]) :- write('| W '),
+display_row_empty(M, [1|RT]) :- write('| 1 '),
                                 M1 is M-1,
                                 display_row_empty(M1, RT).
-display_row_empty(M, [0|RT]) :- write('| B '),
+display_row_empty(M, [0|RT]) :- write('| 0 '),
                                 M1 is M-1,
                                 display_row_empty(M1, RT).
 display_row_empty(M, [null|RT]) :- write('|   '),

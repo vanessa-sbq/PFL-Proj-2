@@ -107,9 +107,9 @@ adjacent(I, J, NI, NJ) :- NI is I, NJ is J - 1, NJ >= 0.  % Left
 adjacent(I, J, NI, NJ) :- NI is I, NJ is J + 1.           % Right
 
 /*
+    % get_max_value(+Board, +Color, +Visited, +CurrentMax, -MaxValue)
     Iterate over Board and store maximum value.
 */
-% get_max_value(+Board, +Color, +Visited, +CurrentMax, -MaxValue)
 get_max_value(Board, Color, Visited, CurrentMax, MaxValue) :-
     length(Board, NumRows),
     nth1(1, Board, Row), length(Row, NumCols),
@@ -117,8 +117,8 @@ get_max_value(Board, Color, Visited, CurrentMax, MaxValue) :-
     get_max_value_helper(Board, Color, Cells, Visited, CurrentMax, MaxValue).
 
 /*
-    Helper function.
-    Recursive function to get the maximum size of a color's components.
+    Helper predicate for get_max_value.
+    Recursive predicate to get the maximum size of a color's components.
 */
 get_max_value_helper(_, _, [], _, MaxValue, MaxValue) :- !.
 get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, MaxValue) :-
@@ -282,31 +282,128 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Play
             - No marble is pushed off the edge
 */
 valid_moves(Board-Color, ListOfMoves) :-
+    length(Board, N),
     get_edge_marbles(Board, Color, EdgeMarblesPos),
     get_all_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves),
-    write(AllEdgeMoves). % TODO: Remove (DEBUG)
-    %get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ListOfMoves).
+    write('AllEdgeMoves='),
+    write(AllEdgeMoves), nl, nl, % TODO: Remove (DEBUG)
+    get_valid_edge_moves(Board, N, AllEdgeMoves, ListOfMoves),
+    write('ListOfMoves='),
+    write(ListOfMoves).
 
 move(Board, Move, NewBoard) :- true. % TODO: Remove (DEBUG) placeholder
 
+
+
+/*
+    get_valid_edge_moves(+Board, +N, +AllEdgeMoves, -ListOfMoves)
+    Given a List of all possible moves, filter only the valid ones.
+*/
 get_valid_edge_moves(_, _, [], []). % No moves left
-get_valid_edge_moves(Board, Color, [Move | RestMoves], [Move | ValidMoves]) :-
-    move(Board, Move, NewBoard), % Simulate move
-    !, % Cut to stop backtracking on move success
-    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
-get_valid_edge_moves(Board, Color, [_ | RestMoves], ValidMoves) :-
-    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the top edge
+    is_top_edge(Move), % Check if the move is from the top edge
+    applyMove(Move, Board, BoardAfter), % Simulate move
+    valid_move(bottom, Board, BoardAfter), 
+    !,
+    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the right edge
+    MaxIndex is N - 1,
+    is_right_edge(Move, MaxIndex), % Check if the move is from the right edge
+    applyMove(Move, Board, BoardAfter), % Simulate move
+    valid_move(left, Board, BoardAfter),
+    !, 
+    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the bottom edge
+    MaxIndex is N - 1,
+    is_bottom_edge(Move, MaxIndex), % Check if the move is from the bottom edge
+    applyMove(Move, Board, BoardAfter), % Simulate move
+    valid_move(top, Board, BoardAfter),
+    !, 
+    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the left edge
+    is_left_edge(Move), % Check if the move is from the left edge
+    applyMove(Move, Board, BoardAfter), % Simulate move
+    valid_move(right, Board, BoardAfter),
+    !,
+    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, N, [_ | RestMoves], ValidMoves) :- % Invalid move, skip it
+    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
 
 
+/*
+    get_board_edge(+Board, +Dir, -TopEdge)
+    Given a board and the edge we want (top, bottom, left or right) return the corresponding Edge.
+*/
+get_board_edge(Board, top, TopEdge) :- Board = [TopEdge | _].
+get_board_edge(Board, bottom, BottomEdge) :- last(Board, BottomEdge).
+get_board_edge(Board, left, LeftEdge) :- findall(FirstElement, member([FirstElement | _], Board), LeftEdge).
+get_board_edge(Board, right, RightEdge) :- findall(RightElement, (member(Row, Board), last(Row, RightElement)), RightEdge).
+
+/*
+    is_top_edge(+Move)
+    Checks if a given move is from the top edge.
+*/
+is_top_edge(0-_-_) :- true.
+
+/*
+    is_right_edge(+Move, +MaxIndex)
+    Checks if a given move is from the right edge.
+*/
+is_right_edge(_-MaxIndex-_, MaxIndex) :- true.
+
+/*
+    is_bottom_edge(+Move, +MaxIndex)
+    Checks if a given move is from the bottom edge.
+*/
+is_bottom_edge(MaxIndex-_-_, MaxIndex) :- true.
+
+/*
+    is_left_edge(+Move)
+    Checks if a given move is from the left edge.
+*/
+is_left_edge(_-0-_) :- true.
+
+/*
+    count_nulls(+EdgeList, -Count)
+    Helper predicate to count the number of nulls in a list.
+*/
+count_nulls([], 0) :- !. 
+count_nulls([null | Tail], Count) :-
+    count_nulls(Tail, TailCount),  
+    Count is TailCount + 1, !. 
+count_nulls([_ | Tail], Count) :-
+    count_nulls(Tail, Count).
+
+/*
+    valid_move(+Dir, +BoardBefore, +BoardAfter)
+    Checks if a move is valid by comparing the number of nulls on the opposite edge before and after the move.
+    A marble cannot push or be pushed to the perimeter. Once it leaves the perimeter it cannot not go back.
+*/
+valid_move(Dir, BoardBefore, BoardAfter) :-
+    get_board_edge(BoardBefore, Dir, BottomBefore),
+    get_board_edge(BoardAfter, Dir, BottomAfter),
+    count_nulls(BottomBefore, NullCountBefore),
+    count_nulls(BottomAfter, NullCountAfter), !,
+    NullCountBefore == NullCountAfter.
+
+/*
+    generate_moves(+N, +(I, J), -Moves)
+    Helper predicate for get_all_edge_moves. This predicate constructs a moves with the structure I-J-Dist.
+*/
 generate_moves(N, (I, J), Moves) :-
     MaxN is N-2,
     findall(I-J-Dist, between(1, MaxN, Dist), Moves).
 
+/*
+    get_all_edge_moves(+Board, +CurrentPlayer, +EdgeMarblesPos, -AllEdgeMoves)
+    Given all the edge marble positions of the current player, this predicate generates all possible moves (valid and invalid).
+*/
 get_all_edge_moves(Board, CurrentPlayer, EdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
     findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves).
 
 /*
+    get_edge_marbles(+Board, +CurrentPlayer, -EdgeMarblesPos)
     Returns all edge marble positions for the current player.
 */
 get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
@@ -314,7 +411,8 @@ get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
     findall((Row, Col), (member((Row, Col), EdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), EdgeMarblesPos).
 
 /*
-    Helper function.
+    edge_positions(+Board, -EdgePositions)
+    Helper predicate for get_edge_marbles.
     Returns a lists of all edge positions in the board (Top edges, right edges, bottom edges, left edges).
 */
 edge_positions(Board, EdgePositions) :-
@@ -324,20 +422,3 @@ edge_positions(Board, EdgePositions) :-
             (between(0, MaxIndex, Row), between(0, MaxIndex, Col), % Iterate over all positions
              (Row == 0; Row == MaxIndex; Col == 0; Col == MaxIndex) ),
             EdgePositions).
-
-% Generate a move by simulating a push
-/* push_move(Board, MarblePos, CurrentPlayer, Move) :-
-    direction(Dir), % Define all possible directions (e.g., up, down, left, right)
-    simulate_push(Board, MarblePos, Dir, CurrentPlayer, Move).
-
-% Ensure the resulting board is valid after the move
-valid_board_after_move(Board, Move) :-
-    apply_move(Board, Move, NewBoard),
-    \+ violates_rules(NewBoard).
-
-% Rule violations: no more than two adjacent same-color marbles
-violates_rules(Board) :-
-    adjacent_positions(Board, Pos1, Pos2, Pos3),
-    marble_at(Board, Pos1, Color),
-    marble_at(Board, Pos2, Color),
-    marble_at(Board, Pos3, Color). */
