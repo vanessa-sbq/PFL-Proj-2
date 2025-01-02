@@ -56,6 +56,10 @@ partitionList(List, NumberOfPartitions, PartitionSize, Res) :- partitionListHelp
                                                                partitionList(NewList, NumberOfPartitions1, PartitionSize, ResTail),
                                                                Res = [NewParttion|ResTail].
 
+reverseColumns([], []).
+reverseColumns([Row|Rows], [RowReverse|ReversedColumnsTail]) :- reverse(Row, RowReverse),
+                                               reverseColumns(Rows, ReversedColumnsTail).
+
 popFromList([], []).
 popFromList([H|T], T).
 
