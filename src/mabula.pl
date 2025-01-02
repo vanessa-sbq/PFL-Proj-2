@@ -272,3 +272,72 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Play
 
 % value() :-
 % choose_move() :-
+
+/*
+    valid_moves(+GameState, -ListOfMoves)
+    Receives the current game state and returns a list of all possible valid moves.
+    Algorithm:
+        1. Identify all marbles of the current player
+        2. For each edge marble, simulate pushing it in all possible directions, and verify:
+            - No marble is pushed off the edge
+*/
+valid_moves(Board-Color, ListOfMoves) :-
+    get_edge_marbles(Board, Color, EdgeMarblesPos),
+    get_all_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves),
+    write(AllEdgeMoves). % TODO: Remove (DEBUG)
+    %get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ListOfMoves).
+
+move(Board, Move, NewBoard) :- true. % TODO: Remove (DEBUG) placeholder
+
+get_valid_edge_moves(_, _, [], []). % No moves left
+get_valid_edge_moves(Board, Color, [Move | RestMoves], [Move | ValidMoves]) :-
+    move(Board, Move, NewBoard), % Simulate move
+    !, % Cut to stop backtracking on move success
+    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
+get_valid_edge_moves(Board, Color, [_ | RestMoves], ValidMoves) :-
+    get_valid_edge_moves(Board, Color, RestMoves, ValidMoves).
+
+
+generate_moves(N, (I, J), Moves) :-
+    MaxN is N-2,
+    findall(I-J-Dist, between(1, MaxN, Dist), Moves).
+
+get_all_edge_moves(Board, CurrentPlayer, EdgeMarblesPos, AllEdgeMoves) :-
+    length(Board, N),
+    findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves).
+
+/*
+    Returns all edge marble positions for the current player.
+*/
+get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
+    edge_positions(Board, EdgePositions),  % Get all top edge positions
+    findall((Row, Col), (member((Row, Col), EdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), EdgeMarblesPos).
+
+/*
+    Helper function.
+    Returns a lists of all edge positions in the board (Top edges, right edges, bottom edges, left edges).
+*/
+edge_positions(Board, EdgePositions) :-
+    length(Board, N), % Get the number of rows
+    MaxIndex is N - 1,  % Calculate maximum row index
+    findall((Row, Col),
+            (between(0, MaxIndex, Row), between(0, MaxIndex, Col), % Iterate over all positions
+             (Row == 0; Row == MaxIndex; Col == 0; Col == MaxIndex) ),
+            EdgePositions).
+
+% Generate a move by simulating a push
+/* push_move(Board, MarblePos, CurrentPlayer, Move) :-
+    direction(Dir), % Define all possible directions (e.g., up, down, left, right)
+    simulate_push(Board, MarblePos, Dir, CurrentPlayer, Move).
+
+% Ensure the resulting board is valid after the move
+valid_board_after_move(Board, Move) :-
+    apply_move(Board, Move, NewBoard),
+    \+ violates_rules(NewBoard).
+
+% Rule violations: no more than two adjacent same-color marbles
+violates_rules(Board) :-
+    adjacent_positions(Board, Pos1, Pos2, Pos3),
+    marble_at(Board, Pos1, Color),
+    marble_at(Board, Pos2, Color),
+    marble_at(Board, Pos3, Color). */
