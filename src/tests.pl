@@ -140,7 +140,7 @@ test3_get_valid_edge_moves_top :- board3(Board),
                                   write(ValidMoves).
 
 test3_valid_moves :- board3(Board),
-                     valid_moves(Board-1, ListOfMoves).
+                     valid_moves(Board-0, ListOfMoves).
 
 test3_applyMove1 :- board3(Board), applyMove(0-1-1, Board, BoardAfter), display_board(8, 8, BoardAfter), valid_move(bottom, Board, BoardAfter). 
 test3_applyMove2 :- board3(Board), applyMove(0-1-2, Board, BoardAfter), display_board(8, 8, BoardAfter), valid_move(bottom, Board, BoardAfter). 

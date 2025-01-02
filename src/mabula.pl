@@ -1,3 +1,39 @@
+play_game :- displayOptions(Mode),
+             configure_game(Mode, GameConfig),
+             initial_state(GameConfig, Board-L1-L2-P1-P2-P1-Color-Level),
+             display_game(Board-L1-L2-P1-P2-P1-Color-L1),
+             game_cycle(Board-L1-L2-P1-P2-P1-Color-L1).
+
+configure_game(1, 0-0-P1-P2) :- % Human vs. Human
+    cls,
+    askForNames(P1, P2),
+    cls, !.
+configure_game(2, 0-L2-P1-'CPU1') :- % Human vs. Computer
+    cls,
+    repeat,
+    write('Hello, please type in your name.'), nl,
+    write('Name:'),
+    read(P1), atom(P1), nl,
+    ask_cpu_level(L2, 'CPU1').
+configure_game(3, L1-L2-'CPU1'-'CPU2') :- % Computer vs. Computer
+    cls,
+    ask_cpu_level(L1, 'CPU1'),
+    ask_cpu_level(L2, 'CPU2').
+
+ask_cpu_level(X, CpuName) :-
+    repeat,
+    format('Choose the level for  ~a:', [CpuName]), nl,
+    write('1 - Random'), nl,
+    write('2 - Greedy'), nl, nl,
+    write('CPU Level:'),
+    read(X),
+    integer(X), X >= 1, X =< 2, !.
+
+initial_state(L1-L2-P1-P2, Board-L1-L2-P1-P2-P1-0-L1) :- 
+    nl, write('Constructing board...'),
+    construct_board(Board),
+    nl, cls.
+
 askForNames(P1_Name, P2_Name) :- repeat,
                                  write('Hello Player1, please type in your name.'), nl,
                                  write('Name:'),
@@ -9,45 +45,13 @@ askForNames(P1_Name, P2_Name) :- repeat,
                                  read(P2_Name), atom(P2_Name), nl,
                                  nl.
 
-%addPlayersToGame(P1_Name, P2_Name) :- assert(player(P1_Name)), assert(player(P2_Name)). % FIXME: Remove assert, add player names to gameState.
-
-next_player(P1, P2, 0, 1-P2).
-next_player(P1, P2, 1, 0-P1).
-
-play_game :- initial_state(_, Board-P1-P2-Color),
-             display_game(Board-P1-P2-P1-Color),
-             game_cycle(Board-P1-P2-P1-Color).
-
-% TODO: Uncomment and implement
-%game_cycle(GameState-Player) :- game_over(GameState, Winner), !,
-%                                congratulate(Winner).
-game_cycle(Board-P1-P2-Player-Color):- %choose_move(GameState, Player, Move),
-                               %move(GameState, Move, NewGameState),
-                               NewBoard = Board,
-                               next_player(P1, P2, Color, NextColor-NextPlayer),
-                               display_game(NewBoard-P1-P2-NextPlayer-NextColor), !,
-                               game_cycle(NewBoard-P1-P2-NextPlayer-NextColor).
-
-congratulate(playerName) :- write('Congratulations, ', playerName, ' won.'), nl.
-
-executeGame(1) :- play_game, !.
-executeGame(2) :- write('Not implemented, option 2'), !.
-executeGame(3) :- write('Not implemented, option 3'), !.
-
-initial_state(GameConfig, Board-P1-P2-Color) :-
-    cls,
-    askForNames(P1, P2),
-    cls,
-    construct_board(Board).
-
-display_game(Board-P1-P2-CurrentPlayer-Color) :-
+display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
     cls,
     display_board(8, 8, Board),
     display_player_turn(CurrentPlayer, Color, Move).
 
 display_player_turn(Player, Color, Row-Col-Dist) :-
-    write(Player),
-    write(', what marble do you want to push?'), nl, nl,
+    write(Player), write(', what marble do you want to push?'), nl, nl,
     write('Row of the marble:'), 
     repeat,
     read(Row),
@@ -57,7 +61,23 @@ display_player_turn(Player, Color, Row-Col-Dist) :-
     write('How many cells do you want to push it?'), nl,
     write('Distance:'),
     repeat,
-    read(Dist).
+    read(Dist), !.
+
+% TODO: Uncomment and implement
+%game_cycle(Board-P1-P2-Player-Color-Level) :- game_over(GameState, Winner), !,
+%                                              congratulate(Winner).
+game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
+game_cycle(Board-L1-L2-P1-P2-_-Color-Level):- %choose_move(GameState, Player, Move),
+                               %move(GameState, Move, NewGameState),
+                               next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
+                               display_game(Board-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, % TODO: Use NewBoard when move implemented
+                               game_cycle(Board-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). % TODO: Use NewBoard when move implemented
+
+next_player(L1, L2, P1, P2, 0, 1-P2-L2).
+next_player(L1, L2, P1, P2, 1, 0-P1-L1).
+
+congratulate(Player) :- write('Congratulations, ', Player, ' won.'), nl.
+
 
 %game_over() :-
 % Verify if the game has ended -> check if there are marbles on the perimeter

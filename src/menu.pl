@@ -8,8 +8,13 @@ displayMenu :- write('                                                 '), nl,
                write('                                                 '), nl.
 
 
-displayOptions(X) :- write('1 - Human vs. Human'), nl,
+displayOptions(X) :- repeat,
+                     write('1 - Human vs. Human'), nl,
                      write('2 - Human vs. Computer'), nl,
                      write('3 - Computer vs. Computer'), nl, nl,
                      write('Game mode: '),
-                     read(X).
+                     read(X),
+                     integer(X), 
+                     X >= 1, 
+                     X =< 3,
+                     !.
