@@ -11,18 +11,22 @@ askForNames(P1_Name, P2_Name) :- repeat,
 
 %addPlayersToGame(P1_Name, P2_Name) :- assert(player(P1_Name)), assert(player(P2_Name)). % FIXME: Remove assert, add player names to gameState.
 
+next_player(P1, P2, 0, 1-P2).
+next_player(P1, P2, 1, 0-P1).
 
 play_game :- initial_state(_, Board-P1-P2-Color),
-             display_game(Board-P1-P2-Color).
-             %game_cycle(Board-Player-Color).
+             display_game(Board-P1-P2-P1-Color),
+             game_cycle(Board-P1-P2-P1-Color).
 
-game_cycle(GameState-Player) :- game_over(GameState, Winner), !,
-                                congratulate(Winner).
-game_cycle(GameState-Player):- choose_move(GameState, Player, Move),
-                               move(GameState, Move, NewGameState),
-                               next_player(Player, NextPlayer),
-                               display_game(NewGameState-NextPlayer), !,
-                               game_cycle(NewGameState-NextPlayer).
+% TODO: Uncomment and implement
+%game_cycle(GameState-Player) :- game_over(GameState, Winner), !,
+%                                congratulate(Winner).
+game_cycle(Board-P1-P2-Player-Color):- %choose_move(GameState, Player, Move),
+                               %move(GameState, Move, NewGameState),
+                               NewBoard = Board,
+                               next_player(P1, P2, Color, NextColor-NextPlayer),
+                               display_game(NewBoard-P1-P2-NextPlayer-NextColor), !,
+                               game_cycle(NewBoard-P1-P2-NextPlayer-NextColor).
 
 congratulate(playerName) :- write('Congratulations, ', playerName, ' won.'), nl.
 
@@ -36,11 +40,12 @@ initial_state(GameConfig, Board-P1-P2-Color) :-
     cls,
     construct_board(Board).
 
-display_game(Board-P1-P2-Color) :- 
+display_game(Board-P1-P2-CurrentPlayer-Color) :-
+    cls,
     display_board(8, 8, Board),
-    display_player_turn(P1, Color).
+    display_player_turn(CurrentPlayer, Color, Move).
 
-display_player_turn(Player, Color) :-
+display_player_turn(Player, Color, Row-Col-Dist) :-
     write(Player),
     write(', what marble do you want to push?'), nl, nl,
     write('Row of the marble:'), 
