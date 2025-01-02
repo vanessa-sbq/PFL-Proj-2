@@ -274,7 +274,7 @@ applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, 
                                                                   reverseColumns(NewBoardRowReversed, NewBoard). %, print(NewBoard). %TODO: remove
 
 %FIXME: Fix move ?
-move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Player-Color, PossibleMoves),
+move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Color, PossibleMoves),
                                                           member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard).
 
@@ -289,7 +289,29 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Play
 % valid_moves() :-
 
 % value() :-
-% choose_move() :-
+
+/*
+    choose_move(GameState-Player-Color, Level, Move)
+    Receives the current game state and returns a move.
+    Algorithm:
+        1. First identify whether we are a CPU or a Human Player. This is done using the Level argument.
+           If Level is 0 then we are dealing with a Human Player;
+           If Level is 1 then we are dealing with a CPU of level one;
+           If Level is 2 then we are dealing with a CPU of level two.
+        2. For a Human we print the relevant information:
+              The name of the player who will need to choose the next move.
+              The color of the marbles that the player can move.
+        3. For an Ai we will print the current CPU and the move that it chose.
+*/
+choose_move(Board-Player-Color, 1, Move) :- valid_moves(Board-Color, PossibleMoves),
+                                            random_member(Move, PossibleMoves), !.
+%choose_move(Board-Player-Color, 2, Move) :-
+choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
+                                                    format('~w, what marble do you want to push?', [Player]), nl,nl,
+                                                    write('Row of the marble: '), read(I), nl,
+                                                    write('Column of the marble: '), read(J), nl, nl,
+                                                    write('How far do you want to push it?'), nl,nl,
+                                                    write('Number of squares to push the marble: '), read(Distance), nl, nl.
 
 /*
     valid_moves(+GameState, -ListOfMoves)
