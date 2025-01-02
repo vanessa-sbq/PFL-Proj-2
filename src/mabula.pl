@@ -12,13 +12,12 @@ askForNames(P1_Name, P2_Name) :- repeat,
 %addPlayersToGame(P1_Name, P2_Name) :- assert(player(P1_Name)), assert(player(P2_Name)). % FIXME: Remove assert, add player names to gameState.
 
 
-play_game :- initial_state(GameState-Player),
-             display_game(GameState-Player),
-             game_cycle(GameState-Player).
+play_game :- initial_state(_, Board-P1-P2-Color),
+             display_game(Board-P1-P2-Color).
+             %game_cycle(Board-Player-Color).
 
 game_cycle(GameState-Player) :- game_over(GameState, Winner), !,
                                 congratulate(Winner).
-
 game_cycle(GameState-Player):- choose_move(GameState, Player, Move),
                                move(GameState, Move, NewGameState),
                                next_player(Player, NextPlayer),
@@ -27,17 +26,33 @@ game_cycle(GameState-Player):- choose_move(GameState, Player, Move),
 
 congratulate(playerName) :- write('Congratulations, ', playerName, ' won.'), nl.
 
-executeGame(1) :- cls,
-                  askForNames(P1, P2),
-%                 addPlayersToGame(P1, P2),
-                  construct_board(_NewBoard),
-                  cls,
-                  display_board(8, 8, _NewBoard).
-                  %write('Game not implemented.').
-
+executeGame(1) :- play_game, !.
 executeGame(2) :- write('Not implemented, option 2'), !.
 executeGame(3) :- write('Not implemented, option 3'), !.
 
+initial_state(GameConfig, Board-P1-P2-Color) :-
+    cls,
+    askForNames(P1, P2),
+    cls,
+    construct_board(Board).
+
+display_game(Board-P1-P2-Color) :- 
+    display_board(8, 8, Board),
+    display_player_turn(P1, Color).
+
+display_player_turn(Player, Color) :-
+    write(Player),
+    write(', what marble do you want to push?'), nl, nl,
+    write('Row of the marble:'), 
+    repeat,
+    read(Row),
+    write('Column of the marble:'),
+    repeat,
+    read(Col), nl,
+    write('How many cells do you want to push it?'), nl,
+    write('Distance:'),
+    repeat,
+    read(Dist).
 
 %game_over() :-
 % Verify if the game has ended -> check if there are marbles on the perimeter
@@ -265,8 +280,11 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Play
 
 % check_max_marbles() :- 
 
-% initial_state() :-
-% display_game() :-
+
+
+
+
+
 % move() :-
 % valid_moves() :-
 
