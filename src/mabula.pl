@@ -189,21 +189,14 @@ get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
     Receives the current game state and returns a list of all possible valid moves.
     Algorithm:
         1. Identify all marbles of the current player
-        2. For each marble, simulate pushing it in all possible directions:
-            - For an edge marble, verify:
-                - Can only be pushed in a specific direction (e.g. left edge marble can only be pushed to the right)
-                - Marbles are pushed in a straight line.
-                - No marble is pushed off the edge
-            - For a normal marble, verify:
-                - No marble is pushed off the edge
+        2. For each edge marble, simulate pushing it in all possible directions, and verify:
+            - No marble is pushed off the edge
 */
 valid_moves(Board-Color, ListOfMoves) :-
     get_edge_marbles(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos),
     get_all_edge_moves(Board, Color, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves).
     %get_valid_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves, ValidEdgeMoves).
     % TODO: For now this is just getting the edge moves
-    %get_valid_normal_moves(Board, Color, ValidNormalMoves),
-    %findall(Move, (valid_edge_move(Board, CurrentPlayer, Move); valid_normal_move(Board, CurrentPlayer, Move)), ListOfMoves).
 
 get_all_edge_moves(Board, CurrentPlayer, TopEdgeMarblesPos, RightEdgeMarblesPos, BottomEdgeMarblesPos, LeftEdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
@@ -267,28 +260,6 @@ edge_positions(Board, TopEdgePositions, RightEdgePositions, BottomEdgePositions,
     findall((Row, MaxRow), between(0, MaxRow, Row), RightEdgePositions), 
     findall((MaxRow, Col), between(0, MaxRow, Col), BottomEdgePositions), 
     findall((Row, 0), between(0, MaxRow, Row), LeftEdgePositions).
-
-/*
-    Returns all normal marble positions for the current player.
-    A normal marble is a marble that is not on the perimeter of the board.
-*/
-get_normal_marbles(Board, CurrentPlayer, MarblePositions) :-
-    normal_positions(Board, NormalPositions),
-    findall((Row, Col), 
-        (member((Row, Col), NormalPositions), % For each normal position
-        get_element(Board, Row, Col, Color),  % Get the color at that position
-        Color == CurrentPlayer),              % Check if it matches the current player
-        MarblePositions).                     % Collect all matching positions
-
-normal_position(Row, Col, Rows, Cols) :-
-    MaxRow is Rows - 2,            % Calculate maximum row index
-    MaxCol is Cols - 2,            % Calculate maximum column index
-    between(1, MaxRow, Row),       % Generate valid Row values
-    between(1, MaxCol, Col).       % Generate valid Col values
-
-normal_positions(Board, NormalPositions) :-
-    length(Board, N),                  % Get the number of rows
-    findall((Row, Col), normal_position(Row, Col, N, N), NormalPositions).
 
 % Generate a move by simulating a push
 /* push_move(Board, MarblePos, CurrentPlayer, Move) :-
