@@ -299,7 +299,8 @@ applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, 
                                                                   reverseColumns(NewBoardRowReversed, NewBoard). %, print(NewBoard). %TODO: remove
 
 %FIXME: Fix move ?
-move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Player-Color, PossibleMoves),
+move(Board-Player-Color, -1-(-1)-(-1), Board).
+move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Color, PossibleMoves),
                                                           member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard).
 
@@ -307,14 +308,62 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Play
 
 
 
+% Wrapper Function - Needed so maplist can work properlly.
+apply_move_to_board(Board, Move, NewBoard) :- applyMove(Move, Board, NewBoard).
 
+% Wrapper Function - % get_max_value(+Board, +Color, +Visited, +CurrentMax, -MaxValue)
+get_max_value_of_board(Color, Board, MaxValue) :- get_max_value(Board, Color, [], 0, MaxValue).
+
+
+/*
+    Helper function.
+    This function allows the AI to get the best move.
+    Algorithm:
+        1. Check if there are valid moves (Otherwise we skip this turn)
+        2. Using maplist, create all boards where each board is a permutation of the original one. (A move was applied to the board.)
+        3. Using maplist we will now get the MaxValue of each board and store it in a new list (MaxValues).
+        4. After obtaining MaxValues we will fetch the indexes that contain the biggest values.
+        6. Since the max values may occour more than one time we will choose an index randomly.
+        5. The index that was obtained gives us the max value position but it also gives the move position that created the board which contains the max value.
+           So we get the Move by indexing into AllValidMoves with this index.
+*/
+get_best_move(Board-Color, [], -1-(-1)-(-1)).
+get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(Board), AllValidMoves, NewBoards),
+                                                   maplist(get_max_value_of_board(Color), NewBoards, MaxValues),
+                                                   get_max_values_indexes(MaxValues, MaxValueIndexes),
+                                                   random_member(Index, MaxValueIndexes),
+                                                   nth0(Index, AllValidMoves, Move).%, write(Index). % TODO: remove
 
 
 % move() :-
 % valid_moves() :-
 
 % value() :-
-% choose_move() :-
+
+/*
+    choose_move(GameState-Player-Color, Level, Move)
+    Receives the current game state and returns a move.
+    Algorithm:
+        1. First identify whether we are a CPU or a Human Player. This is done using the Level argument.
+           If Level is 0 then we are dealing with a Human Player;
+           If Level is 1 then we are dealing with a CPU of level one;
+           If Level is 2 then we are dealing with a CPU of level two.
+        2. For a Human we print the relevant information:
+              The name of the player who will need to choose the next move.
+              The color of the marbles that the player can move.
+        3. For an Ai we will print the current CPU and the move that it chose.
+*/
+choose_move(Board-Player-Color, 1, Move) :- valid_moves(Board-Color, PossibleMoves),
+                                            ((PossibleMoves \== [], random_member(Move, PossibleMoves)); (Move = -1-(-1)-(-1))), !.
+choose_move(Board-Player-Color, 2, Move) :- valid_moves(Board-Color, PossibleMoves),
+                                            get_best_move(Board-Color, PossibleMoves, Move), !.
+choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
+                                                    write('Use -1 -1 -1 to skip this round.'),nl,
+                                                    format('~w, what marble do you want to push?', [Player]), nl,nl,
+                                                    write('Row of the marble: '), read(I), nl,
+                                                    write('Column of the marble: '), read(J), nl, nl,
+                                                    write('How far do you want to push it?'), nl,nl,
+                                                    write('Number of squares to push the marble: '), read(Distance), nl, nl.
 
 /*
     valid_moves(+GameState, -ListOfMoves)
