@@ -172,3 +172,37 @@ ef :- board3(_Board), get_valid_edge_moves(_Board, 8, [7-2-1], ValidMoves), writ
 
 
 /*********************************************/
+
+/*********************AI-Level-1-Tests************************/
+ai11 :- board1(X), choose_move(X-cpu1-0, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 1 where level 1 AI will move a black marble.
+ai12 :- board1(X), choose_move(X-cpu1-1, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 1 where level 1 AI will move a white marble.
+
+ai13 :- board2(X), choose_move(X-cpu1-0, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 2 where level 1 AI will move a black marble.
+ai14 :- board2(X), choose_move(X-cpu1-1, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 2 where level 1 AI will move a white marble.
+
+ai15 :- board3(X), choose_move(X-cpu1-0, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 3 where level 1 AI will move a black marble.
+ai16 :- board3(X), choose_move(X-cpu1-1, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 3 where level 1 AI will move a white marble.
+
+ai17 :- board4(X), choose_move(X-cpu1-0, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 4 where level 1 AI will move a black marble.
+ai18 :- board4(X), choose_move(X-cpu1-1, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 4 where level 1 AI will move a white marble.
+
+ai19 :- board5(X), choose_move(X-cpu1-0, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 1 AI will move a black marble.
+ai110 :- board5(X), choose_move(X-cpu1-1, 1, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 1 AI will move a white marble.
+/*************************************************************/
+
+/*********************AI-Level-2-Tests************************/
+ai21 :- board1(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 1 where level 2 AI will move a black marble.
+ai22 :- board1(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 1 where level 2 AI will move a white marble.
+
+ai23 :- board2(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 2 where level 2 AI will move a black marble.
+ai24 :- board2(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 2 where level 2 AI will move a white marble.
+
+ai25 :- board3(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 3 where level 2 AI will move a black marble.
+ai26 :- board3(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 3 where level 2 AI will move a white marble.
+
+ai27 :- board4(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 4 where level 2 AI will move a black marble.
+ai28 :- board4(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 4 where level 2 AI will move a white marble.
+
+ai29 :- board5(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 2 AI will move a black marble.
+ai210 :- board5(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 2 AI will move a white marble.
+/*************************************************************/

@@ -60,6 +60,9 @@ reverseColumns([], []).
 reverseColumns([Row|Rows], [RowReverse|ReversedColumnsTail]) :- reverse(Row, RowReverse),
                                                reverseColumns(Rows, ReversedColumnsTail).
 
+get_max_values_indexes([], []).
+get_max_values_indexes(List, MaxValueIndexes) :- max_member(MaxValue, List), findall(Index, nth0(Index, List, MaxValue), MaxValueIndexes), !.
+
 popFromList([], []).
 popFromList([H|T], T).
 
