@@ -15,7 +15,7 @@ display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
     display_board(8, 8, Board).
 
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner),
-                                                    congratulate(Winner, P1, P2).
+                                                    congratulate(Winner, P1, P2), !.
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
                                repeat,
                                choose_move(Board-L1-L2-P1-P2-Player-Color-Level, Level, NewI-NewJ-Distance),
