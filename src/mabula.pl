@@ -193,8 +193,8 @@ move(Board-L1-L2-P1-P2-Player-Color-0, OldI-OldJ-Distance, NewBoard) :-
                                                           length(Board, N),
                                                           is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game %FIXME: Cut here ?
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
-move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
-                                                          member(OldI-OldJ-Distance, PossibleMoves),
+move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- %valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
+                                                          %member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
 
 check_max_marbles(Board, WinnerColor) :- get_max_value_of_board(0, Board, MaxBlackValue),
