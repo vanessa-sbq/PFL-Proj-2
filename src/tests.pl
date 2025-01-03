@@ -46,6 +46,15 @@ board5([[null,1   ,1   ,0   ,1   ,0   ,1   ,null],
         [0   ,1   ,1   ,null,null,null,null,0   ],
         [null,null,null,0   ,1   ,0   ,1   ,null]]).
 
+board6([[null, null, null, null, null, null, null, null],
+        [null,1,1,1,1,1,1,null],
+        [null,1,1,1,1,1,1,null],
+        [null,1,1,1,1,1,1,null],
+        [null,0,1,1,1,1,1,null],
+        [null,1,1,1,1,1,1,null],
+        [null,1,1,1,1,1,1,null],
+        [null, null, null, null, null ,null ,null ,null]]).
+
 % Printing the boards
 board1_before :- board1(Board), display_board(8, 8, Board).
 board2_before :- board2(Board), display_board(8, 8, Board).

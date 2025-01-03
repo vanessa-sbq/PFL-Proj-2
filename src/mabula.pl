@@ -64,9 +64,9 @@ display_player_turn(Player, Color, Row-Col-Dist) :-
     read(Dist), !.
 
 % TODO: Uncomment and implement
-%game_cycle(Board-P1-P2-Player-Color-Level) :- game_over(GameState, Winner), !,
-%                                              congratulate(Winner).
-game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
+%game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
+game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board, Winner),
+                                                    congratulate(Winner, P1, P2).
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
                                repeat,
                                choose_move(Board-Player-Color, Level, OldI-OldJ-Distance),
@@ -79,13 +79,16 @@ game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):-
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
 next_player(L1, L2, P1, P2, 1, 0-P1-L1).
 
-congratulate(Player) :- write('Congratulations, ', Player, ' won.'), nl.
+congratulate(-1, P1, P2) :- format('Tie between ~w and ~w.', [P1, P2]),nl.
+congratulate(0, P1, P2) :- format('Congratulations, ~w won.', [P1]),nl.
+congratulate(1, P1, P2) :- format('Congratulations, ~w won.', [P2]),nl.
 
 
-%game_over() :-
-% Verify if the game has ended -> check if there are marbles on the perimeter
-% If game has ended, add a visited attribute to each field and set it to false
-% Iterate over board and check components and set fields to visited, check current max and corresponding color (BFS?)
+game_over(Board, Winner) :- valid_moves(Board-0, List),
+                            valid_moves(Board-1, List2),
+                            List == [], List2 == [],
+                            check_max_marbles(Board, Winner).
+
 
 /*
 [1,2,3,4] _X4
@@ -307,7 +310,9 @@ move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Colo
                                                           member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard).
 
-% check_max_marbles() :- 
+check_max_marbles(Board, WinnerColor) :- get_max_value_of_board(0, Board, MaxBlackValue),
+                                         get_max_value_of_board(1, Board, MaxWhiteValue),
+                                         ((MaxBlackValue =:= MaxWhiteValue, WinnerColor = -1);(max(MaxBlackValue, MaxWhiteValue, MaxBlackValue), WinnerColor = 0); WinnerColor = 1).
 
 
 
@@ -367,7 +372,7 @@ choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== 
                                                     write('Column of the marble: '), read(OldJ), nl, nl,
                                                     write('How far do you want to push it?'), nl,nl,
                                                     write('Number of squares to push the marble: '), read(Distance), nl, nl,
-                                                    translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize),.
+                                                    translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize).
 
 /*
     valid_moves(+GameState, -ListOfMoves)
