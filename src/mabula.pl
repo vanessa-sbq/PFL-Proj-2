@@ -2,6 +2,7 @@ play_game :- displayOptions(Mode),
              configure_game(Mode, GameConfig),
              initial_state(GameConfig, Board-L1-L2-P1-P2-P1-Color-Level),
              display_game(Board-L1-L2-P1-P2-P1-Color-L1),
+             format('It\'s ~w\'s turn!', [P1]), nl, nl,
              game_cycle(Board-L1-L2-P1-P2-P1-Color-L1).
 
 initial_state(L1-L2-P1-P2, Board-L1-L2-P1-P2-P1-0-L1) :- 
@@ -22,6 +23,7 @@ game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):-
                                move(Board-L1-L2-P1-P2-Player-Color-Level, NewI-NewJ-Distance, NewBoard),
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
                                display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), 
+                               format('It\'s ~w\'s turn!', [NextPlayer]), nl, nl,
                                game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !. 
 
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
@@ -35,22 +37,6 @@ game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner) :- valid_moves(Board-L1-
                             valid_moves(Board-L1-L2-P1-P2-Player-1-Level, List2),
                             List == [], List2 == [],
                             check_max_marbles(Board, Winner).
-
-
-/*
-[1,2,3,4] _X4
-[2,3,4] _X3
-[3,4] _X2
-[4] _X1
-[] [] -> _X = []
-
-_X1 = [4-false|[]]
-_X2 = [3-false|[4-false]]
-_X3 = [2-false|[3-false,4-false]]
-_X2 = [1-false|[2-false,3-false,4-false]]
-_X1 = [1-false|[1-false, 2-false,3-false,4-false]]
-NewRow = [1-false, 2-false,3-false,4-false] ?
-*/
 
 add_visited_field_helper([], []) :- !.
 add_visited_field_helper([Piece|T], NewRow) :- add_visited_field_helper(T, NewRowTail),
@@ -75,13 +61,6 @@ bottom_side_all_null(Board) :- last(Board, BottomRow),
 % Check if left side empty.
 left_side_all_null([]).
 left_side_all_null([[null | _] | Rest]) :- left_side_all_null(Rest).
-
-check_if_game_ended(Board) :- top_side_all_null(Board), right_side_all_null(Board), bottom_side_all_null(Board), left_side_all_null(Board), !.
-
-
-%check_black_max(Board, MaxBlackValue) :- largest_cluster(Board, 0, MaxBlackValue).
-
-%check_white_max(Board, MaxWhiteValue) :- 
 
 /*
     Get the element of the board, given an I and a J.
@@ -126,9 +105,9 @@ get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, Ma
     get_max_value_helper(Board, Color, RestCells, Visited, CurrentMax, MaxValue).
 
 /*
+    % get_component_value(+Board, +Color, +Visited, +I, +J, -Value)
     Get a value of a component.
 */
-% get_component_value(+Board, +Color, +Visited, +I, +J, -Value)
 get_component_value(Board, Color, Visited, I, J, Acc, Value) :-
     findall((NI, NJ), 
             (adjacent(I, J, NI, NJ), 
@@ -148,25 +127,6 @@ get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Val
 get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
     get_component_value_helper(Board, Color, RestNeigh, Visited, Acc, Value).
 
-
-/*
-    [[null,0   ,null,null],
-     [0   ,0   ,0   ,null],
-     [null,0   ,null,null],
-     [null,null,null,null]]
-
-     [[null,0],[null,0]]
-
-    [[null,0,null,null],[0,0,0,null],[null,0,null,null],[null,null,null,null]] Connected components are (0,1)(1,0)(1,1)(1,2)(2,1)
-
-    [[null,0   ,null,null],[0   ,0   ,null,null],[null,null,null,0   ],[null   ,null   ,null   ,null   ]]
-
-    [[null,0   ,null,null],[0   ,0   ,null,null],[null,0 ,null,0   ],[0   ,0   ,0   ,0   ]]
-
-    findall((NI, NJ), (adjacent(2, 1, NI, NJ), get_element([[null,0   ,null,null],[0   ,0   ,null,null],[null,null,null,0   ],[0   ,0   ,0   ,0   ]], NI, NJ, ColorOfElem), \+ member((NI, NJ), []), ColorOfElem == 0), Neighbors)
-    [(1,1)]
-*/
-
 % Push the next piece if it exists
 pushNextPiece(Row, _, null, Row). % Stop if the target position is empty (null)
 pushNextPiece(Row, TargetIndex, NextPiece, NewRow) :- NextTarget is TargetIndex + 1,          % Determine the next target position
@@ -181,7 +141,7 @@ pushPieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece)
 movePiece(Row, CurrentIndex, 0, Row).
 movePiece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + Distance,
                                                   nth0(CurrentIndex, Row, Piece), % Get the piece at CurrentIndex
-                                                  Piece \== null,                  % Ensure we are moving a valid piece % FIXME: \= or \==
+                                                  Piece \== null,                 % Ensure we are moving a valid piece % FIXME: \= or \==
                                                   pushPieces(Row, TargetIndex, Piece, TempNewRow), !, % Push pieces as needed
                                                   replace(TempNewRow, CurrentIndex, Piece, null, NewRow).
 
@@ -194,30 +154,6 @@ moveRowPieces(Board, RowIndex, InitialIndex, DistanceToTravel, NewRow) :- nth0(R
                                                             NextIndex is InitialIndex + 1,
                                                             replace(Board, RowIndex, RowToEdit, TempRow, NewBoard),
                                                             moveRowPieces(NewBoard, RowIndex, NextIndex, NextDistanceToTravel, NewRow), !.
-
-/*
-    DEBUG: Remove
-
-    % Example where the first move if from top to bottom, moves 6 cases.
-    applyMove(0-1-6, [[null,1,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]], N).
-    Result = [[null,null,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
-
-    For move 0-1-5
-
-    Initial
-    [[null,1,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
-
-    Final
-    [[null,null,1,0,1,0,1,null],[0,null,null,null,null,null,null,0],[1,null,null,null,null,null,null,0],[0,null,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
-
-    For move 0-1-1
-
-    Initial
-    [[null,1,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,0],[0,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,null,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
-
-    Final
-    [[null,null,1,0,1,0,1,null],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,0],[0,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[1,1,null,null,null,null,null,1],[0,1,null,null,null,null,null,0],[null,1,1,0,1,0,1,null]]
-*/
 
 % Moves from the top slice originate from index 0.
 applyMove(0-OldJ-Distance, Board, NewBoard) :- transpose(Board, Columns),
@@ -265,14 +201,11 @@ check_max_marbles(Board, WinnerColor) :- get_max_value_of_board(0, Board, MaxBla
                                          get_max_value_of_board(1, Board, MaxWhiteValue),
                                          ((MaxBlackValue =:= MaxWhiteValue, WinnerColor = -1);(max(MaxBlackValue, MaxWhiteValue, MaxBlackValue), WinnerColor = 0); WinnerColor = 1).
 
-
-
 % Wrapper Function - Needed so maplist can work properlly.
 apply_move_to_board(Board, Move, NewBoard) :- applyMove(Move, Board, NewBoard).
 
 % Wrapper Function - % get_max_value(+Board, +Color, +Visited, +CurrentMax, -MaxValue)
 get_max_value_of_board(Color, Board, MaxValue) :- get_max_value(Board, Color, [], 0, MaxValue).
-
 
 /*
     Helper function.
@@ -293,8 +226,6 @@ get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(B
                                                    random_member(Index, MaxValueIndexes),
                                                    nth0(Index, AllValidMoves, Move).%, write(Index). % TODO: remove
 
-% value() :-
-
 /*
     choose_move(GameState-Player-Color, Level, Move)
     Receives the current game state and returns a move.
@@ -311,7 +242,7 @@ get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(B
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 1, Move) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             ((PossibleMoves \== [], random_member(Move, PossibleMoves)); (Move = -1-(-1)-(-1))), !.
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 2, Move) :- 
-                                            format('It`s ~w`s turn!', [Player]), nl,nl,
+                                            %format('It`s ~w`s turn!', [Player]), nl,nl,
                                             valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             get_best_move(Board-Color, PossibleMoves, Move), !.
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
@@ -321,7 +252,7 @@ choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- Player \==
                                                     read_integer('Row: ', OldI),
                                                     read_integer('Column: ', OldJ), nl,
                                                     write('How far do you want to push it?'), nl,
-                                                    read_integer('Number of squares to push the marble: ', Distance), nl,
+                                                    read_integer('Distance: ', Distance), nl,
                                                     translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize).
 
 /*
@@ -427,7 +358,6 @@ generate_moves_helper(I, J, MaxN, [I-J-MaxN|ResTail]) :- I >= 0, J >= 0, MaxN > 
 
 generate_moves(N, (I, J), Moves) :-
     MaxN is N-2,
-    %generate_moves_helper(I, J, MaxN, Moves).
     findall(I-J-Dist, between(1, MaxN, Dist), Moves).
 
 /*
@@ -437,15 +367,13 @@ generate_moves(N, (I, J), Moves) :-
 get_all_edge_moves(Board, CurrentPlayer, EdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
     maplist(generate_moves(N), EdgeMarblesPos, Moves), append(Moves, AllEdgeMoves).
-    %findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves).
+
+wrapper_for_include(Board, Color, (Row, Col)) :- get_element(Board, Row, Col, Color).
 
 /*
     get_edge_marbles(+Board, +CurrentPlayer, -EdgeMarblesPos)
     Returns all edge marble positions for the current player.
 */
-
-wrapper_for_include(Board, Color, (Row, Col)) :- get_element(Board, Row, Col, Color).
-
 get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
     edge_positions(Board, EdgePositions),  % Get all top edge positions
     include(wrapper_for_include(Board, CurrentPlayer), EdgePositions, EdgeMarblesPos).
@@ -462,6 +390,7 @@ createLeftIndex(MaxIndex, [(MaxIndex, 0)|ResTail]) :- MaxIndex > 0, MaxIndex1 is
 
 createRightIndex(_, 0, []).
 createRightIndex(Row, MaxIndex, [(MaxIndex, Row)|ResTail]) :-  Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createRightIndex(Row, MaxIndex1, ResTail).
+
 /*
     edge_positions(+Board, -EdgePositions)
     Helper predicate for get_edge_marbles.
@@ -475,7 +404,3 @@ edge_positions(Board, EdgePositions) :-
     createLeftIndex(MaxIndex, LeftEdges),
     createRightIndex(MaxIndex, MaxIndex, RightEdges),
     append([TopEdges, BottomEdges, LeftEdges, RightEdges], EdgePositions).
-    %findall((Row, Col),
-    %        (between(0, MaxIndex, Row), between(0, MaxIndex, Col), % Iterate over all positions
-    %         (Row == 0; Row == MaxIndex; Col == 0; Col == MaxIndex) ),
-    %        EdgePositions).
