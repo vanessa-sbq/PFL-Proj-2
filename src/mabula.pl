@@ -65,7 +65,7 @@ display_player_turn(Player, Color, Row-Col-Dist) :-
 
 % TODO: Uncomment and implement
 %game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
-game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board, Winner),
+game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner),
                                                     congratulate(Winner, P1, P2).
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
                                repeat,
@@ -73,8 +73,8 @@ game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):-
                                length(Board, BoardSize),
                                move(Board-L1-L2-P1-P2-Player-Color-Level, NewI-NewJ-Distance, NewBoard),
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
-                               display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, 
-                               game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). 
+                               display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), 
+                               game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !. 
 
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
 next_player(L1, L2, P1, P2, 1, 0-P1-L1).
@@ -83,9 +83,8 @@ congratulate(-1, P1, P2) :- format('Tie between ~w and ~w.', [P1, P2]),nl.
 congratulate(0, P1, P2) :- format('Congratulations, ~w won.', [P1]),nl.
 congratulate(1, P1, P2) :- format('Congratulations, ~w won.', [P2]),nl.
 
-
-game_over(Board, Winner) :- valid_moves(Board-0, List),
-                            valid_moves(Board-1, List2),
+game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner) :- valid_moves(Board-L1-L2-P1-P2-Player-0-Level, List),
+                            valid_moves(Board-L1-L2-P1-P2-Player-1-Level, List2),
                             List == [], List2 == [],
                             check_max_marbles(Board, Winner).
 
@@ -234,8 +233,8 @@ pushPieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece)
 movePiece(Row, CurrentIndex, 0, Row).
 movePiece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + Distance,
                                                   nth0(CurrentIndex, Row, Piece), % Get the piece at CurrentIndex
-                                                  Piece \= null,                  % Ensure we are moving a valid piece
-                                                  pushPieces(Row, TargetIndex, Piece, TempNewRow), % Push pieces as needed
+                                                  Piece \== null,                  % Ensure we are moving a valid piece % FIXME: \= or \==
+                                                  pushPieces(Row, TargetIndex, Piece, TempNewRow), !, % Push pieces as needed
                                                   replace(TempNewRow, CurrentIndex, Piece, null, NewRow).
 
 
@@ -305,10 +304,10 @@ applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, 
                                                                   reverseColumns(NewBoardRowReversed, NewBoard). %, print(NewBoard). %TODO: remove
 
 %FIXME: Fix move ?
-move(Board-L1-L2-P1-P2-Player-Color-Level, -1-(-1)-(-1), Board), !.
+move(Board-L1-L2-P1-P2-Player-Color-Level, -1-(-1)-(-1), Board) :- !.
 move(Board-L1-L2-P1-P2-Player-Color-0, OldI-OldJ-Distance, NewBoard) :- 
                                                           length(Board, N),
-                                                          is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game
+                                                          is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game %FIXME: Cut here ?
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
 move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                                           member(OldI-OldJ-Distance, PossibleMoves),
@@ -395,14 +394,14 @@ valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, ListOfMoves) :-
     write('ListOfMoves='),
     write(ListOfMoves).
 
-is_valid_move(BoardBefore, N, Color, Move) :-
+is_valid_move(BoardBefore, N, Color, I-J-Distance) :-
     MaxIndex is N - 1,
-    %get_element(BoardBefore, I, J, Color),  % FIXME: This crashes the game, but has to be checked for human players
+    get_element(BoardBefore, I, J, Color),  % FIXME: This crashes the game, but has to be checked for human players
     (
-        (is_top_edge(Move), applyMove(Move, BoardBefore, BoardAfter), valid_move(bottom, BoardBefore, BoardAfter));
-        (is_right_edge(Move, MaxIndex), applyMove(Move, BoardBefore, BoardAfter), valid_move(left, BoardBefore, BoardAfter));
-        (is_bottom_edge(Move, MaxIndex), applyMove(Move, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
-        (is_left_edge(Move), applyMove(Move, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
+        (is_top_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(bottom, BoardBefore, BoardAfter));
+        (is_right_edge(I-J-Distance, MaxIndex), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(left, BoardBefore, BoardAfter));
+        (is_bottom_edge(I-J-Distance, MaxIndex), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
+        (is_left_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
     ), !.
 is_valid_move(_, _, _, _) :- 
     write('Invalid'), nl, % TODO: Remove (DEBUG)
@@ -475,8 +474,12 @@ valid_move(Dir, BoardBefore, BoardAfter) :-
     generate_moves(+N, +(I, J), -Moves)
     Helper predicate for get_all_edge_moves. This predicate constructs a moves with the structure I-J-Dist.
 */
+generate_moves_helper(_, _, 0, []).
+generate_moves_helper(I, J, MaxN, [I-J-MaxN|ResTail]) :- I >= 0, J >= 0, MaxN > 0, MaxN1 is MaxN - 1, generate_moves_helper(I, J, MaxN1, ResTail).
+
 generate_moves(N, (I, J), Moves) :-
     MaxN is N-2,
+    %generate_moves_helper(I, J, MaxN, Moves).
     findall(I-J-Dist, between(1, MaxN, Dist), Moves).
 
 /*
@@ -485,16 +488,32 @@ generate_moves(N, (I, J), Moves) :-
 */
 get_all_edge_moves(Board, CurrentPlayer, EdgeMarblesPos, AllEdgeMoves) :-
     length(Board, N),
-    findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves).
+    maplist(generate_moves(N), EdgeMarblesPos, Moves), append(Moves, AllEdgeMoves).
+    %findall(Move, (member(Pos, EdgeMarblesPos), generate_moves(N, Pos, Moves), member(Move, Moves)), AllEdgeMoves).
 
 /*
     get_edge_marbles(+Board, +CurrentPlayer, -EdgeMarblesPos)
     Returns all edge marble positions for the current player.
 */
+
+wrapper_for_include(Board, Color, (Row, Col)) :- get_element(Board, Row, Col, Color).
+
 get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
     edge_positions(Board, EdgePositions),  % Get all top edge positions
-    findall((Row, Col), (member((Row, Col), EdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), EdgeMarblesPos).
+    include(wrapper_for_include(Board, CurrentPlayer), EdgePositions, EdgeMarblesPos).
+    %findall((Row, Col), (member((Row, Col), EdgePositions), get_element(Board, Row, Col, Color), Color == CurrentPlayer), EdgeMarblesPos).
 
+createTopIndex(0, []).
+createTopIndex(MaxIndex, [(0,MaxIndex)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createTopIndex(MaxIndex1, ResTail).
+
+createBottomIndex(_, 0, []).
+createBottomIndex(Row, MaxIndex, [(Row, MaxIndex)|ResTail]) :- Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createBottomIndex(Row, MaxIndex1, ResTail).
+
+createLeftIndex(0, []).
+createLeftIndex(MaxIndex, [(MaxIndex, 0)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createLeftIndex(MaxIndex1, ResTail).
+
+createRightIndex(_, 0, []).
+createRightIndex(Row, MaxIndex, [(MaxIndex, Row)|ResTail]) :-  Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createRightIndex(Row, MaxIndex1, ResTail).
 /*
     edge_positions(+Board, -EdgePositions)
     Helper predicate for get_edge_marbles.
@@ -503,7 +522,12 @@ get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
 edge_positions(Board, EdgePositions) :-
     length(Board, N), % Get the number of rows
     MaxIndex is N - 1,  % Calculate maximum row index
-    findall((Row, Col),
-            (between(0, MaxIndex, Row), between(0, MaxIndex, Col), % Iterate over all positions
-             (Row == 0; Row == MaxIndex; Col == 0; Col == MaxIndex) ),
-            EdgePositions).
+    createTopIndex(MaxIndex, TopEdges),
+    createBottomIndex(MaxIndex, MaxIndex, BottomEdges),
+    createLeftIndex(MaxIndex, LeftEdges),
+    createRightIndex(MaxIndex, MaxIndex, RightEdges),
+    append([TopEdges, BottomEdges, LeftEdges, RightEdges], EdgePositions).
+    %findall((Row, Col),
+    %        (between(0, MaxIndex, Row), between(0, MaxIndex, Col), % Iterate over all positions
+    %         (Row == 0; Row == MaxIndex; Col == 0; Col == MaxIndex) ),
+    %        EdgePositions).

@@ -16,6 +16,14 @@ replicate(Amount, Elem, List) :- Amount > 0,
 list_append([], L2, L2).
 list_append([H|T], L2, [H|L3Tail]) :- list_append(T, L2, L3Tail).
 
+get_line(Result, Res):-
+    get_char(Char),
+    Char \= '\n',
+    append(Res, [Char], Acc1),
+    get_line(Result, Acc1).
+get_line(Result, Acc):-
+    atom_chars(Result, Acc).
+
 max(Elem1, Elem2, Res) :- Elem1 > Elem2, Res is Elem1;
                           Elem1 < Elem2, Res is Elem2.
 
