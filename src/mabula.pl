@@ -69,12 +69,12 @@ display_player_turn(Player, Color, Row-Col-Dist) :-
 game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
                                repeat,
-                               choose_move(Board-Player-Color, Level, OldI-OldJ-Distance),
+                               choose_move(Board-L1-L2-P1-P2-Player-Color-Level, Level, NewI-NewJ-Distance),
                                length(Board, BoardSize),
-                               move(Board-Player-Color, NewI-NewJ-Distance, NewBoard),
+                               move(Board-L1-L2-P1-P2-Player-Color-Level, NewI-NewJ-Distance, NewBoard),
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
-                               display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, % TODO: Use NewBoard when move implemented
-                               game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). % TODO: Use NewBoard when move implemented
+                               display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !, 
+                               game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel). 
 
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
 next_player(L1, L2, P1, P2, 1, 0-P1-L1).
@@ -302,10 +302,14 @@ applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, 
                                                                   reverseColumns(NewBoardRowReversed, NewBoard). %, print(NewBoard). %TODO: remove
 
 %FIXME: Fix move ?
-move(Board-Player-Color, -1-(-1)-(-1), Board).
-move(Board-Player-Color, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-Color, PossibleMoves),
+move(Board-L1-L2-P1-P2-Player-Color-Level, -1-(-1)-(-1), Board), !.
+move(Board-L1-L2-P1-P2-Player-Color-0, OldI-OldJ-Distance, NewBoard) :- 
+                                                          length(Board, N),
+                                                          is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game
+                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
+move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                                           member(OldI-OldJ-Distance, PossibleMoves),
-                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard).
+                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
 
 % check_max_marbles() :- 
 
@@ -337,10 +341,6 @@ get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(B
                                                    random_member(Index, MaxValueIndexes),
                                                    nth0(Index, AllValidMoves, Move).%, write(Index). % TODO: remove
 
-
-% move() :-
-% valid_moves() :-
-
 % value() :-
 
 /*
@@ -356,18 +356,21 @@ get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(B
               The color of the marbles that the player can move.
         3. For an Ai we will print the current CPU and the move that it chose.
 */
-choose_move(Board-Player-Color, 1, Move) :- valid_moves(Board-Color, PossibleMoves),
+choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 1, Move) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             ((PossibleMoves \== [], random_member(Move, PossibleMoves)); (Move = -1-(-1)-(-1))), !.
-choose_move(Board-Player-Color, 2, Move) :- valid_moves(Board-Color, PossibleMoves),
+choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 2, Move) :- 
+                                            format('It`s ~w`s turn!', [Player]), nl,nl,
+                                            valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             get_best_move(Board-Color, PossibleMoves, Move), !.
-choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
+choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
+                                                    length(Board, BoardSize),
                                                     write('Use -1 -1 -1 to skip this round.'),nl,
                                                     format('~w, what ~w marble do you want to push?', [Player, Color]), nl,nl,
                                                     write('Row of the marble: '), read(OldI), nl,
                                                     write('Column of the marble: '), read(OldJ), nl, nl,
                                                     write('How far do you want to push it?'), nl,nl,
                                                     write('Number of squares to push the marble: '), read(Distance), nl, nl,
-                                                    translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize),.
+                                                    translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize).
 
 /*
     valid_moves(+GameState, -ListOfMoves)
@@ -377,54 +380,35 @@ choose_move(Board-Player-Color, 0, I-J-Distance) :- Player \== cpu1, Player \== 
         2. For each edge marble, simulate pushing it in all possible directions, and verify:
             - No marble is pushed off the edge
 */
-valid_moves(Board-Color, ListOfMoves) :-
+valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, ListOfMoves) :-
     length(Board, N),
     get_edge_marbles(Board, Color, EdgeMarblesPos),
     get_all_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves),
     write('AllEdgeMoves='),
     write(AllEdgeMoves), nl, nl, % TODO: Remove (DEBUG)
-    get_valid_edge_moves(Board, N, AllEdgeMoves, ListOfMoves),
+    get_valid_edge_moves(Board, N, Color, AllEdgeMoves, ListOfMoves),
     write('ListOfMoves='),
     write(ListOfMoves).
 
-move(Board, Move, NewBoard) :- true. % TODO: Remove (DEBUG) placeholder
-
-
-
-/*
-    get_valid_edge_moves(+Board, +N, +AllEdgeMoves, -ListOfMoves)
-    Given a List of all possible moves, filter only the valid ones.
-*/
-get_valid_edge_moves(_, _, [], []). % No moves left
-get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the top edge
-    is_top_edge(Move), % Check if the move is from the top edge
-    applyMove(Move, Board, BoardAfter), % Simulate move
-    valid_move(bottom, Board, BoardAfter), 
-    !,
-    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
-get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the right edge
+is_valid_move(BoardBefore, N, Color, Move) :-
     MaxIndex is N - 1,
-    is_right_edge(Move, MaxIndex), % Check if the move is from the right edge
-    applyMove(Move, Board, BoardAfter), % Simulate move
-    valid_move(left, Board, BoardAfter),
-    !, 
-    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
-get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the bottom edge
-    MaxIndex is N - 1,
-    is_bottom_edge(Move, MaxIndex), % Check if the move is from the bottom edge
-    applyMove(Move, Board, BoardAfter), % Simulate move
-    valid_move(top, Board, BoardAfter),
-    !, 
-    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
-get_valid_edge_moves(Board, N, [Move | RestMoves], [Move | ValidMoves]) :- % Move from the left edge
-    is_left_edge(Move), % Check if the move is from the left edge
-    applyMove(Move, Board, BoardAfter), % Simulate move
-    valid_move(right, Board, BoardAfter),
-    !,
-    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
-get_valid_edge_moves(Board, N, [_ | RestMoves], ValidMoves) :- % Invalid move, skip it
-    get_valid_edge_moves(Board, N, RestMoves, ValidMoves).
+    %get_element(BoardBefore, I, J, Color),  % FIXME: This crashes the game, but has to be checked for human players
+    (
+        (is_top_edge(Move), applyMove(Move, BoardBefore, BoardAfter), valid_move(bottom, BoardBefore, BoardAfter));
+        (is_right_edge(Move, MaxIndex), applyMove(Move, BoardBefore, BoardAfter), valid_move(left, BoardBefore, BoardAfter));
+        (is_bottom_edge(Move, MaxIndex), applyMove(Move, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
+        (is_left_edge(Move), applyMove(Move, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
+    ), !.
+is_valid_move(_, _, _, _) :- 
+    write('Invalid'), nl, % TODO: Remove (DEBUG)
+    fail.
 
+get_valid_edge_moves(_, _, _, [], []). % No moves left
+get_valid_edge_moves(Board, N, Color, [Move | RestMoves], [Move | ValidMoves]) :-
+    is_valid_move(Board, N, Color, Move),
+    get_valid_edge_moves(Board, N, Color, RestMoves, ValidMoves), !.
+get_valid_edge_moves(Board, N, Color, [_ | RestMoves], ValidMoves) :- % Invalid move
+    get_valid_edge_moves(Board, N, Color, RestMoves, ValidMoves).
 
 /*
     get_board_edge(+Board, +Dir, -TopEdge)
