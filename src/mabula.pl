@@ -4,67 +4,15 @@ play_game :- displayOptions(Mode),
              display_game(Board-L1-L2-P1-P2-P1-Color-L1),
              game_cycle(Board-L1-L2-P1-P2-P1-Color-L1).
 
-configure_game(1, 0-0-P1-P2) :- % Human vs. Human
-    cls,
-    askForNames(P1, P2),
-    cls, !.
-configure_game(2, 0-L2-P1-'CPU1') :- % Human vs. Computer
-    cls,
-    repeat,
-    write('Hello, please type in your name.'), nl,
-    write('Name:'),
-    read(P1), atom(P1), nl,
-    ask_cpu_level(L2, 'CPU1').
-configure_game(3, L1-L2-'CPU1'-'CPU2') :- % Computer vs. Computer
-    cls,
-    ask_cpu_level(L1, 'CPU1'),
-    ask_cpu_level(L2, 'CPU2').
-
-ask_cpu_level(X, CpuName) :-
-    repeat,
-    format('Choose the level for  ~a:', [CpuName]), nl,
-    write('1 - Random'), nl,
-    write('2 - Greedy'), nl, nl,
-    write('CPU Level:'),
-    read(X),
-    integer(X), X >= 1, X =< 2, !.
-
 initial_state(L1-L2-P1-P2, Board-L1-L2-P1-P2-P1-0-L1) :- 
     nl, write('Constructing board...'),
     construct_board(Board),
     nl, cls.
 
-askForNames(P1_Name, P2_Name) :- repeat,
-                                 write('Hello Player1, please type in your name.'), nl,
-                                 write('Name:'),
-                                 read(P1_Name), atom(P1_Name), nl,
-                                 nl,
-                                 repeat,
-                                 write('Hello Player2, please type in your name.'), nl,
-                                 write('Name:'),
-                                 read(P2_Name), atom(P2_Name), nl,
-                                 nl.
-
 display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
     cls,
-    display_board(8, 8, Board).%,
-    %display_player_turn(CurrentPlayer, Color, Move).
+    display_board(8, 8, Board).
 
-display_player_turn(Player, Color, Row-Col-Dist) :-
-    write(Player), write(', what marble do you want to push?'), nl, nl,
-    write('Row of the marble:'), 
-    repeat,
-    read(Row),
-    write('Column of the marble:'),
-    repeat,
-    read(Col), nl,
-    write('How many cells do you want to push it?'), nl,
-    write('Distance:'),
-    repeat,
-    read(Dist), !.
-
-% TODO: Uncomment and implement
-%game_cycle([]-_-_-_-_-_-_-_) :- !. % TODO: Remove (DEBUG)
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner),
                                                     congratulate(Winner, P1, P2).
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
@@ -369,11 +317,11 @@ choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 2, Move) :-
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
                                                     length(Board, BoardSize),
                                                     write('Use -1 -1 -1 to skip this round.'),nl,
-                                                    format('~w, what ~w marble do you want to push?', [Player, Color]), nl,nl,
-                                                    write('Row of the marble: '), read(OldI), nl,
-                                                    write('Column of the marble: '), read(OldJ), nl, nl,
-                                                    write('How far do you want to push it?'), nl,nl,
-                                                    write('Number of squares to push the marble: '), read(Distance), nl, nl,
+                                                    format('~w, what ~w marble do you want to push?', [Player, Color]), nl,
+                                                    read_integer('Row: ', OldI),
+                                                    read_integer('Column: ', OldJ), nl,
+                                                    write('How far do you want to push it?'), nl,
+                                                    read_integer('Number of squares to push the marble: ', Distance), nl,
                                                     translate_coords(OldI, OldJ, I, J, BoardSize, BoardSize).
 
 /*
@@ -388,11 +336,11 @@ valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, ListOfMoves) :-
     length(Board, N),
     get_edge_marbles(Board, Color, EdgeMarblesPos),
     get_all_edge_moves(Board, Color, EdgeMarblesPos, AllEdgeMoves),
-    write('AllEdgeMoves='),
-    write(AllEdgeMoves), nl, nl, % TODO: Remove (DEBUG)
-    get_valid_edge_moves(Board, N, Color, AllEdgeMoves, ListOfMoves),
-    write('ListOfMoves='),
-    write(ListOfMoves).
+    %write('AllEdgeMoves='), % TODO: Remove (DEBUG)
+    %write(AllEdgeMoves), nl, nl, % TODO: Remove (DEBUG)
+    get_valid_edge_moves(Board, N, Color, AllEdgeMoves, ListOfMoves).
+    %write('ListOfMoves='), % TODO: Remove (DEBUG)
+    %write(ListOfMoves). % TODO: Remove (DEBUG)
 
 is_valid_move(BoardBefore, N, Color, I-J-Distance) :-
     MaxIndex is N - 1,
@@ -404,7 +352,7 @@ is_valid_move(BoardBefore, N, Color, I-J-Distance) :-
         (is_left_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
     ), !.
 is_valid_move(_, _, _, _) :- 
-    write('Invalid'), nl, % TODO: Remove (DEBUG)
+    %write('Invalid'), nl, % TODO: Remove (DEBUG)
     fail.
 
 get_valid_edge_moves(_, _, _, [], []). % No moves left
