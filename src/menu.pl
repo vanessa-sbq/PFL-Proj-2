@@ -39,7 +39,7 @@ configure_game(1, 0-0-P1-P2) :- % Human vs. Human
 configure_game(2, 0-L2-P1-'CPU1') :- % Human vs. Computer
     cls,
     repeat,
-    write('Hello, please type in your name!'), nl,
+    write('Hello Player1, please type in your name.'), nl,
     read_string('Name: ', P1), nl, nl,
     ask_cpu_level(L2, 'CPU1').
 configure_game(3, L1-L2-'CPU1'-'CPU2') :- % Computer vs. Computer
