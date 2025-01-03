@@ -17,6 +17,7 @@ display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level) :- game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner),
                                                     congratulate(Winner, P1, P2), !.
 game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):- 
+                               %write(Level),
                                repeat,
                                choose_move(Board-L1-L2-P1-P2-Player-Color-Level, Level, NewI-NewJ-Distance),
                                length(Board, BoardSize),
@@ -24,7 +25,11 @@ game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):-
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
                                display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), 
                                format('It\'s ~w\'s turn!', [NextPlayer]), nl, nl,
+                               think(NextLevel), nl,
                                game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !. 
+
+think(0) :- !.
+think(BotLevel) :- write('Thinking...'), !.
 
 next_player(L1, L2, P1, P2, 0, 1-P2-L2).
 next_player(L1, L2, P1, P2, 1, 0-P1-L1).
