@@ -46,14 +46,37 @@ board5([[null,1   ,1   ,0   ,1   ,0   ,1   ,null],
         [0   ,1   ,1   ,null,null,null,null,0   ],
         [null,null,null,0   ,1   ,0   ,1   ,null]]).
 
-board6([[null, null, null, null, null, null, null, null],
-        [null,1,1,1,1,1,1,null],
-        [null,1,1,1,1,1,1,null],
-        [null,1,1,1,1,1,1,null],
-        [null,0,1,1,1,1,1,null],
-        [null,1,1,1,1,1,1,null],
-        [null,1,1,1,1,1,1,null],
-        [null, null, null, null, null ,null ,null ,null]]).
+% This board is 2 moves away from finishing
+% Move (1,2) [White Marble] by distance 1 and then move (3,1) [Black Marble] by distance 3 to make vanessa win.
+board6([[ null, null, null, null, null, null, null, null],
+        [ null, null, null,  1  ,  1  , null, null, null],
+        [ null, null,  0  ,  0  ,  0  ,  0  ,  0  , null],
+        [ null, null,  0  ,  0  , null,  0  ,  1  , null],
+        [ null,  1  ,  1  ,  1  ,  1  , null, null, null],
+        [  0  ,  0  , null,  1  ,  1  , null, null, null],
+        [ null,  0  ,  1  ,  0  , null, null, null, null],
+        [ null,  1  , null,  1  , null, null, null, null]]).
+
+% This board is 2 moves away from finishing
+% Move (1,2) [Black Marble] by distance 1 and then move (3,1) [White Marble] by distance 3 to make antonio win.
+board7([[ null, null, null, null, null, null, null, null],
+        [ null, null, null,  0  ,  0  , null, null, null],
+        [ null, null,  1  ,  1  ,  1  ,  1  ,  1  , null],
+        [ null, null,  1  ,  1  , null,  1  ,  0  , null],
+        [ null,  0  ,  0  ,  0  ,  0  , null, null, null],
+        [  1  ,  1  , null,  0  ,  0  , null, null, null],
+        [ null,  1  ,  0  ,  1  , null, null, null, null],
+        [ null,  0  , null,  0  , null, null, null, null]]).
+
+% Board caught in the middle of the game
+board8([[ null, null,  0  , null, null, null, null, null],
+        [ null,  1  ,  1  , null, null,  1  , null, null],
+        [ null, null, null,  0  , null, null, null,  0  ],
+        [  1  ,  1  , null, null,  1  , null, null, null],
+        [  1  ,  1  ,  1  , null,  0  , null, null, null],
+        [ null,  0  ,  0  ,  0  ,  0  ,  0  ,  0  ,  0  ],
+        [  1  , null, null,  1  , null,  0  ,  1  , null],
+        [ null, null, null, null, null, null, null, null]]).
 
 % Printing the boards
 board1_before :- board1(Board), display_board(8, 8, Board).
@@ -215,3 +238,25 @@ ai28 :- board4(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w
 ai29 :- board5(X), choose_move(X-cpu1-0, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 2 AI will move a black marble.
 ai210 :- board5(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~w', [Move]). % Test for board 5 where level 2 AI will move a white marble.
 /*************************************************************/
+
+/*********************GamesThatAreCloseToEnding************************/
+ending_1_HumanHuman :- board6(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
+ending_1_AiLevel2AiLevel2 :- board6(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
+ending_1_AiLevel2Human :- board6(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
+ending_1_AiLevel1AiLevel1 :- board6(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
+ending_1_AiLevel1Human :- board6(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+
+ending_2_HumanHuman :- board7(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
+ending_2_AiLevel2AiLevel2 :- board7(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
+ending_2_AiLevel2Human :- board7(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
+ending_2_AiLevel1AiLevel1 :- board7(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
+ending_2_AiLevel1Human :- board7(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+/**********************************************************************/
+
+/*********************GamesThatAreInTheMiddleOfGameplay************************/
+middle_1_HumanHuman :- board8(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
+middle_1_AiLevel2AiLevel2 :- board8(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
+middle_1_AiLevel2Human :- board8(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
+middle_1_AiLevel1AiLevel1 :- board8(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
+middle_1_AiLevel1Human :- board8(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+/******************************************************************************/

@@ -24,8 +24,8 @@ game_cycle(Board-L1-L2-P1-P2-Player-Color-Level):-
                                move(Board-L1-L2-P1-P2-Player-Color-Level, NewI-NewJ-Distance, NewBoard),
                                next_player(L1, L2, P1, P2, Color, NextColor-NextPlayer-NextLevel),
                                display_game(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), 
-                               format('It\'s ~w\'s turn!', [NextPlayer]), nl, nl,
-                               think(NextLevel), nl,
+                               %format('It\'s ~w\'s turn!', [NextPlayer]), nl, nl,
+                               %think(NextLevel), nl,
                                game_cycle(NewBoard-L1-L2-P1-P2-NextPlayer-NextColor-NextLevel), !. 
 
 think(0) :- !.
@@ -198,7 +198,7 @@ move(Board-L1-L2-P1-P2-Player-Color-0, OldI-OldJ-Distance, NewBoard) :-
                                                           length(Board, N),
                                                           is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game %FIXME: Cut here ?
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
-move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- %valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
+move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- Level =\= 0,%valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                                           %member(OldI-OldJ-Distance, PossibleMoves),
                                                           applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
 
@@ -250,10 +250,10 @@ choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 2, Move) :-
                                             %format('It`s ~w`s turn!', [Player]), nl,nl,
                                             valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             get_best_move(Board-Color, PossibleMoves, Move), !.
-choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- Player \== cpu1, Player \== cpu2,
-                                                    length(Board, BoardSize),
+choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- length(Board, BoardSize),
                                                     write('Use -1 -1 -1 to skip this round.'),nl,
-                                                    format('~w, what ~w marble do you want to push?', [Player, Color]), nl,
+                                                    ((Color =:= 0, ColorName = black);(ColorName = white)), !,
+                                                    format('~w, what ~w marble do you want to push?', [Player, ColorName]), nl,
                                                     read_integer('Row: ', OldI),
                                                     read_integer('Column: ', OldJ), nl,
                                                     write('How far do you want to push it?'), nl,
@@ -287,9 +287,7 @@ is_valid_move(BoardBefore, N, Color, I-J-Distance) :-
         (is_bottom_edge(I-J-Distance, MaxIndex), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
         (is_left_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
     ), !.
-is_valid_move(_, _, _, _) :- 
-    %write('Invalid'), nl, % TODO: Remove (DEBUG)
-    fail.
+
 
 get_valid_edge_moves(_, _, _, [], []). % No moves left
 get_valid_edge_moves(Board, N, Color, [Move | RestMoves], [Move | ValidMoves]) :-
