@@ -7,6 +7,10 @@
 :- use_module(library(between)).
 :- use_module(library(clpfd)).
 
+
+/*
+    Main predicate. Starts the game.
+*/
 play :- cls,
         displayMenu,
         play_game, !.
