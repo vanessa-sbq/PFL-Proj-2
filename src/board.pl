@@ -5,13 +5,15 @@
     White pieces are represented by a 1 while Black pieces are represented by a 0.
     The board is a list of lists (matrix).
 */
-construct_board(FilledBoard) :- replicate(8, null, Row),
-                                replicate(8, Row, Board),
+construct_board(Number, FilledBoard) :- replicate(Number, null, Row),
+                                replicate(Number, Row, Board),
                                 repeat,
-                                generate_list(0, Res, true),
-                                validate_pieces(Res), 
-                                partition_list(Res, 4, 6, BoardSides),
-                                place_initial_pieces(Board, BoardSides, FilledBoard), !.
+                                MaxNumberOfMarbles is ((Number * 4) - 8),
+                                generate_list(MaxNumberOfMarbles, 0, Res, true),
+                                validate_pieces(Res),
+                                ElementByPartition is (MaxNumberOfMarbles div 4), 
+                                partition_list(Res, 4, ElementByPartition, BoardSides),
+                                place_initial_pieces(Board, BoardSides, FilledBoard),  write(ElementByPartition), !.
 
 /*
     fill_sides(+Idx, +MaxSize, +RightList, +LeftListReversed, +BoardMiddle, -NewBoardMiddle).
@@ -34,7 +36,8 @@ fill_sides(Idx, MaxSize, [RH|RT], [LH|LT], [H|T], NewBoard) :- Idx1 is Idx + 1,
 place_initial_pieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- append([null|Top], [null], TopSlice), % Fill top half of Mabula board.
                                                                            length(Board, BoardSize),             % Board is a square
                                                                            ElementToDelete is BoardSize - 1,     % Delete the last element so we only work with the middle part.
-                                                                           delete_elem(ElementToDelete, Board, [null,null,null,null,null,null,null,null], [NewBoardHead | NewBoardMiddle]), % Continuation of upper line (Actually removes the element)
+                                                                           replicate(BoardSize, null, Replica),
+                                                                           delete_elem(ElementToDelete, Board, Replica, [NewBoardHead | NewBoardMiddle]), % Continuation of upper line (Actually removes the element)
                                                                            length(NewBoardMiddle, BoardMiddleSize),
                                                                            reverse(Left, LeftReversed), % Calculate how many lists are in the middle.
                                                                            fill_sides(0, BoardMiddleSize, Right, LeftReversed, NewBoardMiddle, FilledBoardMiddle), % Fill the right side of the Mabula board.
@@ -45,7 +48,7 @@ place_initial_pieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- app
 /*
     validate_whites(+PieceArrangementList, +NumWhitePieces)
 
-    Helper predicate that checks if we have a total of 12 white pieces.
+    Helper predicate that checks if we have a total of MaxNumberOfElemsOfSameColor white pieces.
     
     Arguments:
         [Piece|T] -> The list that contains all pieces.
@@ -53,20 +56,20 @@ place_initial_pieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- app
 
     Description:
         This predicate recursively goes down the list and counts only white pieces.
-        If more or less than 12 white pieces are found the predicate returns no.
+        If more or less than MaxNumberOfElemsOfSameColor white pieces are found the predicate returns no.
 */
-validate_whites([], 12) :- !.
-validate_whites([], NumWhitePieces) :- NumWhitePieces =\= 12, !, fail.
-validate_whites([Piece | T], NumWhitePieces) :- Piece =:= 1, 
+validate_whites([], MaxNumberOfElemsOfSameColor, MaxNumberOfElemsOfSameColor) :- !.
+validate_whites([], NumWhitePieces, MaxNumberOfElemsOfSameColor) :- NumWhitePieces =\= MaxNumberOfElemsOfSameColor, !, fail.
+validate_whites([Piece | T], NumWhitePieces, MaxNumberOfElemsOfSameColor) :- Piece =:= 1, 
                                                NumWhitePieces1 is NumWhitePieces + 1, 
-                                               validate_whites(T, NumWhitePieces1);
+                                               validate_whites(T, NumWhitePieces1, MaxNumberOfElemsOfSameColor);
                                                Piece =:= 0,
-                                               validate_whites(T, NumWhitePieces).
+                                               validate_whites(T, NumWhitePieces, MaxNumberOfElemsOfSameColor).
 
 /*
     validate_blacks(+PieceArrangementList, +NumBlackPieces)
 
-    Helper predicate that checks if we have a total of 12 black pieces.
+    Helper predicate that checks if we have a total of MaxNumberOfElemsOfSameColor black pieces.
     
     Arguments:
         [Piece|T] -> The list that contains all pieces.
@@ -74,15 +77,15 @@ validate_whites([Piece | T], NumWhitePieces) :- Piece =:= 1,
 
     Description:
         This predicate recursively goes down the list and counts only black pieces.
-        If more or less than 12 black pieces are found the predicate returns no.
+        If more or less than MaxNumberOfElemsOfSameColor black pieces are found the predicate returns no.
 */
-validate_blacks([], 12) :- !.
-validate_blacks([], NumBlackPieces) :- NumBlackPieces =\= 12, !, fail.
-validate_blacks([Piece | T], NumBlackPieces) :- Piece =:= 0, 
+validate_blacks([], MaxNumberOfElemsOfSameColor, MaxNumberOfElemsOfSameColor) :- !.
+validate_blacks([], NumBlackPieces, MaxNumberOfElemsOfSameColor) :- NumBlackPieces =\= MaxNumberOfElemsOfSameColor, !, fail.
+validate_blacks([Piece | T], NumBlackPieces, MaxNumberOfElemsOfSameColor) :- Piece =:= 0, 
                                                NumBlackPieces1 is NumBlackPieces + 1, 
-                                               validate_blacks(T, NumBlackPieces1);
+                                               validate_blacks(T, NumBlackPieces1, MaxNumberOfElemsOfSameColor);
                                                Piece =:= 1,
-                                               validate_blacks(T, NumBlackPieces).
+                                               validate_blacks(T, NumBlackPieces, MaxNumberOfElemsOfSameColor).
 
 /*
     check_last_link(+PieceArrangementList)
@@ -94,8 +97,8 @@ validate_blacks([Piece | T], NumBlackPieces) :- Piece =:= 0,
                            then that means that the last element cannot be the same as the first two otherwise 3 pieces would be "touching".
                            The same is verified if the last two elements are the same.
 */
-check_last_link([H1, H2 | Tail]) :- list_nth(23, [H1, H2 | Tail], Last), ((H1 =\= H2);(H1 =:= H2, H1 =\= Last, H2 =\= Last)),
-                   list_nth(22, [H1, H2 | Tail], SencondLast), ((Last =\= SencondLast);(Last =:= SencondLast, H1 =\= Last)).
+check_last_link(LastIndex, SecondToLastIndex, [H1, H2 | Tail]) :- list_nth(LastIndex, [H1, H2 | Tail], Last), ((H1 =\= H2);(H1 =:= H2, H1 =\= Last, H2 =\= Last)),
+                   list_nth(SecondToLastIndex, [H1, H2 | Tail], SencondLast), ((Last =\= SencondLast);(Last =:= SencondLast, H1 =\= Last)).
 
 /*
     validate_pieces(+PieceArrangementList)
@@ -105,24 +108,24 @@ check_last_link([H1, H2 | Tail]) :- list_nth(23, [H1, H2 | Tail], Last), ((H1 =\
     - validate_blacks
     - check_last_link
 */
-validate_pieces([H1, H2 | Tail]) :- validate_whites([H1, H2 | Tail], 0), validate_blacks([H1, H2 | Tail], 0), check_last_link([H1, H2 | Tail]).
+validate_pieces([H1, H2 | Tail]) :- length([H1, H2 | Tail], NumMarbles), MaxNumberOfElemsOfSameColor is NumMarbles div 2, validate_whites([H1, H2 | Tail], 0, MaxNumberOfElemsOfSameColor), validate_blacks([H1, H2 | Tail], 0, MaxNumberOfElemsOfSameColor), Last is NumMarbles - 1, SecondToLast is NumMarbles - 2, check_last_link(Last, SecondToLast, [H1, H2 | Tail]).
 
 /*
-    generate_list(+Size, -Res, +GenWhite)
+    generate_list(+MaxNumberOfMarbles, +Size, -Res, +GenWhite)
 
     Generates the marbles to place around the Mabula Board.
     Also ensures that in each list there are no more than 2 consecutive elements of the same color. 
     This validation has to be done in the end too, for when we connect the beginning of the piece list to its end (not done in this predicate).
 */
-generate_list(24, [], _) :- !.
-generate_list(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
+generate_list(MaxNumberOfMarbles, MaxNumberOfMarbles, [], _) :- !.
+generate_list(MaxNumberOfMarbles, Size, Res, GenWhite) :- GenWhite, % Generate white pieces
                                      repeat,
                                      random(1, 3, RandValue), % At max 2 pieces of the same color can be connected in the beginning.
                                      NextSize is Size + RandValue,
-                                     NextSize =< 24, !,
+                                     NextSize =< MaxNumberOfMarbles, !,
                                      replicate(RandValue, 1, WhitePiecesLists),
                                      sw_bool_value(GenWhite, GenBlack),
-                                     generate_list(NextSize, ResTail, GenBlack),
+                                     generate_list(MaxNumberOfMarbles, NextSize, ResTail, GenBlack),
                                      append(WhitePiecesLists, ResTail, Res);
 
                                      sw_bool_value(GenWhite, GenBlack), % Generate black pieces
@@ -130,9 +133,9 @@ generate_list(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
                                      repeat,
                                      random(1, 3, RandValue),
                                      NextSize is Size + RandValue,
-                                     NextSize =< 24, !,
+                                     NextSize =< MaxNumberOfMarbles, !,
                                      replicate(RandValue, 0, BlackPiecesList),
-                                     generate_list(NextSize, ResTail, GenBlack),
+                                     generate_list(MaxNumberOfMarbles, NextSize, ResTail, GenBlack),
                                      append(BlackPiecesList, ResTail, Res).
 
 /*
@@ -140,11 +143,12 @@ generate_list(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
 
     Helper predicate. Draws the lines that delimit the fields where the player can place a marble.
 */
-display_row_line(0) :- write('|'), nl, !.
-display_row_line(M) :- 
+display_row_line(0, _) :- write('|'), nl, !.
+display_row_line(MMax, MMax) :- write(' '), fail.
+display_row_line(M, MMax) :- 
             write('|---'),
             M1 is M-1,
-            display_row_line(M1).
+            display_row_line(M1, MMax), !.
 
 /*
     display_row_empty(+M, +BoardRow)
@@ -168,11 +172,8 @@ display_row_empty(M, [null|RT]) :- write('|   '),
     Helper predicate. Displays the column numbers.
 */
 display_col_numbers(MaxCol, MaxCol) :- !.
-display_col_numbers(M, MaxCol) :-
-            M1 is M + 1 ,
-            write('   '),
-            write(M1),
-            display_col_numbers(M1, MaxCol).
+display_col_numbers(M, MaxCol) :- M >= 10, M1 is M + 1, write('  '), write(M1), display_col_numbers(M1, MaxCol), !.
+display_col_numbers(M, MaxCol) :- M1 is M + 1, write('   '), write(M1), display_col_numbers(M1, MaxCol).
 
 /*
     display_row_number(+N)
@@ -180,6 +181,7 @@ display_col_numbers(M, MaxCol) :-
     Helper predicate. Displays the number of each row.
 */
 display_row_number(0) :- !.
+display_row_number(N) :- N < 10, write(N), write(' '), !.
 display_row_number(N) :- write(N).
 
 /*
@@ -187,9 +189,9 @@ display_row_number(N) :- write(N).
 
     Helper predicate. Draws the rows of the board.
 */
-display_row(N, M, Row) :-
+display_row(N, MMax, M, Row) :-
             write(' '),
-            display_row_line(M),
+            display_row_line(M, MMax),
             display_row_number(N),
             display_row_empty(M, Row), !.
 
@@ -199,15 +201,17 @@ display_row(N, M, Row) :-
     Draws the board on the screen. Receives the board and its length and height.
 */
 display_board(N, M, [Row|Rows]) :-
+            write(' '),
             display_col_numbers(0, M), nl,
             display_board_cells(N, M, [Row|Rows]).
 
 display_board_cells(0, M, []) :- 
             write(' '), 
-            display_row_line(M), nl, !.
+            display_row_line(M, M), nl, !.
 display_board_cells(N, M, [Row|Rows]) :-
+            MMax is M,
             N1 is N-1,
-            display_row(N, M, Row),
+            display_row(N, MMax, M, Row),
             display_board_cells(N1, M, Rows).
 
 /*

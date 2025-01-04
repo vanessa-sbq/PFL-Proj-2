@@ -31,7 +31,12 @@ A good video explanation is provided [here](https://www.youtube.com/watch?v=FCLp
 
 A good rule book is provided by **Steffen Spiele** and is located [here](https://steffen-spiele.com/products/mabula).
 
+## Considerations for Game Extensions
+
+Our game supports dynamic board sizes, offering flexibility for players. The board can range from a minimum size of 3×3 to a maximum of 20×20. While technically the game does not impose a hard limit, we have optimized performance for boards up to 20×20 to ensure a smooth gaming experience.
+
 ## Game Logic
+ 
 ### Game Configuration Representation
 
 When we first call ``play`` our game starts by calling ``configure_game`` which, depending on the mode chosen by the player, will create a **GameConfig** which has the following values:

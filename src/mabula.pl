@@ -33,8 +33,11 @@ play_game :- display_options(Mode),
             - Last variable (L1 in the beggining) => The level associated with the player that is currently playing the game.
 */
 initial_state(L1-L2-P1-P2, Board-L1-L2-P1-P2-P1-0-L1) :- 
+    repeat,
+    read_integer('Size of board: ', Number),    %TODO: remove
+    (Number >= 3, Number =< 20 -> !; write('Invalid option, please choose a number between 3 and 20.'), nl, fail),
     nl, write('Constructing board...'),
-    construct_board(Board),
+    construct_board(Number, Board),
     nl, cls.
 
 /*
@@ -44,7 +47,8 @@ initial_state(L1-L2-P1-P2, Board-L1-L2-P1-P2-P1-0-L1) :-
 */
 display_game(Board-L1-L2-P1-P2-CurrentPlayer-Color-Level) :-
     cls,
-    display_board(8, 8, Board).
+    length(Board, N),
+    display_board(N, N, Board).
 
 /*
     Main Loop
