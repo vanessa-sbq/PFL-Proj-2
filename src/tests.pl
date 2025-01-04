@@ -181,28 +181,6 @@ test3_applyMove4 :- board3(Board), applyMove(0-1-4, Board, BoardAfter), display_
 test3_applyMove5 :- board3(Board), applyMove(0-1-5, Board, BoardAfter), display_board(8, 8, BoardAfter), valid_move(bottom, Board, BoardAfter). 
 test3_applyMove6 :- board3(Board), applyMove(0-1-6, Board, BoardAfter), display_board(8, 8, BoardAfter), valid_move(bottom, Board, BoardAfter). 
 test3_applyMove7 :- board3(Board), applyMove(0-2-3, Board, BoardAfter), display_board(8, 8, BoardAfter), valid_move(bottom, Board, BoardAfter). 
-
-
-
-/* ab :- board3(BoardBefore), 
-      board4(BoardAfter), 
-      valid_top_move(BoardBefore, 1,0-1-4 , BoardAfter),
-      write(BoardBefore),
-      write(BoardAfter).
-
-cd :- board3(BoardBefore), 
-      board4(BoardAfter),
-      get_board_edge(BoardBefore, bottom, BottomBefore),
-      get_board_edge(BoardAfter, bottom, BottomAfter),
-      count_nulls([null,null,1,0,1,0,1,null], NullCountBefore),
-      count_nulls([null,1,1,0,1,0,1,null], NullCountAfter), !,
-      write(NullCountBefore), nl,
-      write(NullCountAfter), nl,
-      NullCountBefore == NullCountAfter. */
-
-ef :- board3(_Board), get_valid_edge_moves(_Board, 8, [7-2-1], ValidMoves), write(ValidMoves).
-
-
 /*********************************************/
 
 /*********************AI-Level-1-Tests************************/
@@ -240,23 +218,23 @@ ai210 :- board5(X), choose_move(X-cpu1-1, 2, Move), nl, format('Performed move ~
 /*************************************************************/
 
 /*********************GamesThatAreCloseToEnding************************/
-ending_1_HumanHuman :- board6(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
-ending_1_AiLevel2AiLevel2 :- board6(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
-ending_1_AiLevel2Human :- board6(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
-ending_1_AiLevel1AiLevel1 :- board6(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
-ending_1_AiLevel1Human :- board6(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+ending_1_human_human :- board6(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).   % vanessa wins.
+ending_1_ai_level2_ai_level2 :- board6(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2). % CPU1 wins.
+ending_1_ai_level2_human :- board6(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0). % CPU1 wins.
+ending_1_ai_level1_ai_level1 :- board6(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1). % CPU1 wins.
+ending_1_ai_level1_human :- board6(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0). % CPU1 wins.
 
-ending_2_HumanHuman :- board7(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
-ending_2_AiLevel2AiLevel2 :- board7(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
-ending_2_AiLevel2Human :- board7(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
-ending_2_AiLevel1AiLevel1 :- board7(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
-ending_2_AiLevel1Human :- board7(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+ending_2_human_human :- board7(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).   % antonio winds.
+ending_2_ai_level2_ai_level2 :- board7(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2). % CPU2 wins.
+ending_2_ai_level2_human :- board7(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0). % CPU2 wins.
+ending_2_ai_level1_ai_level1 :- board7(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1). % CPU2 wins.
+ending_2_ai_level1_human :- board7(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0). % CPU2 wins.
 /**********************************************************************/
 
 /*********************GamesThatAreInTheMiddleOfGameplay************************/
-middle_1_HumanHuman :- board8(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
-middle_1_AiLevel2AiLevel2 :- board8(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
-middle_1_AiLevel2Human :- board8(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
-middle_1_AiLevel1AiLevel1 :- board8(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
-middle_1_AiLevel1Human :- board8(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
+middle_1_human_human :- board8(Board), display_game(Board-0-0-vanessa-antonio-antonio-1-0), game_cycle(Board-0-0-vanessa-antonio-antonio-1-0).
+middle_1_ai_level2_ai_level2 :- board8(Board), display_game(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2), game_cycle(Board-2-2-'CPU1'-'CPU2'-'CPU2'-1-2).
+middle_1_ai_level2_human :- board8(Board), display_game(Board-2-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-2-0-'CPU1'-vanessa-vanessa-1-0).
+middle_1_ai_level1_ai_level1 :- board8(Board), display_game(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1), game_cycle(Board-1-1-'CPU1'-'CPU2'-'CPU2'-1-1).
+middle_1_ai_level1_human :- board8(Board), display_game(Board-1-0-'CPU1'-vanessa-vanessa-1-0), game_cycle(Board-1-0-'CPU1'-vanessa-vanessa-1-0).
 /******************************************************************************/

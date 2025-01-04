@@ -12,5 +12,5 @@
     Main predicate. Starts the game.
 */
 play :- cls,
-        displayMenu,
+        display_menu,
         play_game, !.

@@ -32,7 +32,7 @@ read_integer(Prompt, Number) :-
 /*
     Displays the title.
 */
-displayMenu :- write('                                                 '), nl,
+display_menu :- write('                                                 '), nl,
                write('8b    d8    db    88""Yb 88   88 88        db    '), nl,
                write('88b  d88   dPYb   88__dP 88   88 88       dPYb   '), nl,
                write('88YbdP88  dP__Yb  88""Yb Y8   8P 88  .o  dP__Yb  '), nl,
@@ -40,11 +40,11 @@ displayMenu :- write('                                                 '), nl,
                write('                                                 '), nl.
 
 /*
-    displayOptions(-X)
+    display_options(-X)
 
     Displays the main screen options and reads the user's selection.
 */
-displayOptions(X) :- write('1 - Human vs. Human'), nl,
+display_options(X) :- write('1 - Human vs. Human'), nl,
                      write('2 - Human vs. Computer'), nl,
                      write('3 - Computer vs. Computer'), nl, nl,
                      repeat,

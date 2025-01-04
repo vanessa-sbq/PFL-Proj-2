@@ -1,6 +1,3 @@
-:- use_module(library(random)).
-:- include('./helpers.pl').
-
 /*
     construct_board(-FilledBoard)
 
@@ -11,42 +8,42 @@
 construct_board(FilledBoard) :- replicate(8, null, Row),
                                 replicate(8, Row, Board),
                                 repeat,
-                                generateList(0, Res, true),
-                                validatePieces(Res), 
-                                partitionList(Res, 4, 6, BoardSides),
-                                placeInitialPieces(Board, BoardSides, FilledBoard), !.
+                                generate_list(0, Res, true),
+                                validate_pieces(Res), 
+                                partition_list(Res, 4, 6, BoardSides),
+                                place_initial_pieces(Board, BoardSides, FilledBoard), !.
 
 /*
-    fillSides(+Idx, +MaxSize, +RightList, +LeftListReversed, +BoardMiddle, -NewBoardMiddle).
+    fill_sides(+Idx, +MaxSize, +RightList, +LeftListReversed, +BoardMiddle, -NewBoardMiddle).
 
-    Helper predicate for placeInitialPieces.
+    Helper predicate for place_initial_pieces.
     This predicate receives the board, without the top and bottom list and fills the left and right sides and returns it.
 */
-fillSides(MaxSize, MaxSize, _, _, _, []) :- !.
-fillSides(Idx, MaxSize, [RH|RT], [LH|LT], [H|T], NewBoard) :- Idx1 is Idx + 1,
-                                                              fillSides(Idx1, MaxSize, RT, LT, [H|T], NewBoardTail),           
+fill_sides(MaxSize, MaxSize, _, _, _, []) :- !.
+fill_sides(Idx, MaxSize, [RH|RT], [LH|LT], [H|T], NewBoard) :- Idx1 is Idx + 1,
+                                                              fill_sides(Idx1, MaxSize, RT, LT, [H|T], NewBoardTail),           
                                                               replace_first_last(H, LH, RH, NewList),
                                                               NewBoard = [NewList|NewBoardTail].
 
 /*
-    placeInitialPieces(+Board, +FourSides, -FilledBoard)
+    place_initial_pieces(+Board, +FourSides, -FilledBoard)
 
     Fills the Mabula board with the constructed perimeter.
     Given a list divided into four sublists (sides), each side of the board is filled.
 */
-placeInitialPieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- append([null|Top], [null], TopSlice), % Fill top half of Mabula board.
+place_initial_pieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- append([null|Top], [null], TopSlice), % Fill top half of Mabula board.
                                                                            length(Board, BoardSize),             % Board is a square
                                                                            ElementToDelete is BoardSize - 1,     % Delete the last element so we only work with the middle part.
                                                                            delete_elem(ElementToDelete, Board, [null,null,null,null,null,null,null,null], [NewBoardHead | NewBoardMiddle]), % Continuation of upper line (Actually removes the element)
                                                                            length(NewBoardMiddle, BoardMiddleSize),
                                                                            reverse(Left, LeftReversed), % Calculate how many lists are in the middle.
-                                                                           fillSides(0, BoardMiddleSize, Right, LeftReversed, NewBoardMiddle, FilledBoardMiddle), % Fill the right side of the Mabula board.
+                                                                           fill_sides(0, BoardMiddleSize, Right, LeftReversed, NewBoardMiddle, FilledBoardMiddle), % Fill the right side of the Mabula board.
                                                                            append([null|Bottom], [null], BottomHalfTemp),
                                                                            reverse(BottomHalfTemp, BottomHalf), % Fill bottom half of Mabula board.
                                                                            append([TopSlice|FilledBoardMiddle], [BottomHalf], FilledBoard).% Return the filled Mabula board.                                                                  
 
 /*
-    validateWhites(+PieceArrangementList, +NumWhitePieces)
+    validate_whites(+PieceArrangementList, +NumWhitePieces)
 
     Helper predicate that checks if we have a total of 12 white pieces.
     
@@ -58,16 +55,16 @@ placeInitialPieces(Board, [Top, Right, Bottom, Left | []], FilledBoard) :- appen
         This predicate recursively goes down the list and counts only white pieces.
         If more or less than 12 white pieces are found the predicate returns no.
 */
-validateWhites([], 12) :- !.
-validateWhites([], NumWhitePieces) :- NumWhitePieces =\= 12, !, fail.
-validateWhites([Piece | T], NumWhitePieces) :- Piece =:= 1, 
+validate_whites([], 12) :- !.
+validate_whites([], NumWhitePieces) :- NumWhitePieces =\= 12, !, fail.
+validate_whites([Piece | T], NumWhitePieces) :- Piece =:= 1, 
                                                NumWhitePieces1 is NumWhitePieces + 1, 
-                                               validateWhites(T, NumWhitePieces1);
+                                               validate_whites(T, NumWhitePieces1);
                                                Piece =:= 0,
-                                               validateWhites(T, NumWhitePieces).
+                                               validate_whites(T, NumWhitePieces).
 
 /*
-    validateWhites(+PieceArrangementList, +NumBlackPieces)
+    validate_blacks(+PieceArrangementList, +NumBlackPieces)
 
     Helper predicate that checks if we have a total of 12 black pieces.
     
@@ -79,16 +76,16 @@ validateWhites([Piece | T], NumWhitePieces) :- Piece =:= 1,
         This predicate recursively goes down the list and counts only black pieces.
         If more or less than 12 black pieces are found the predicate returns no.
 */
-validateBlacks([], 12) :- !.
-validateBlacks([], NumBlackPieces) :- NumBlackPieces =\= 12, !, fail.
-validateBlacks([Piece | T], NumBlackPieces) :- Piece =:= 0, 
+validate_blacks([], 12) :- !.
+validate_blacks([], NumBlackPieces) :- NumBlackPieces =\= 12, !, fail.
+validate_blacks([Piece | T], NumBlackPieces) :- Piece =:= 0, 
                                                NumBlackPieces1 is NumBlackPieces + 1, 
-                                               validateBlacks(T, NumBlackPieces1);
+                                               validate_blacks(T, NumBlackPieces1);
                                                Piece =:= 1,
-                                               validateBlacks(T, NumBlackPieces).
+                                               validate_blacks(T, NumBlackPieces).
 
 /*
-    checkLastLink(+PieceArrangementList)
+    check_last_link(+PieceArrangementList)
 
     Helper predicate to check if the last link (where the left side and the top side of the Mabula board meet) do not break the rules.
     
@@ -97,35 +94,35 @@ validateBlacks([Piece | T], NumBlackPieces) :- Piece =:= 0,
                            then that means that the last element cannot be the same as the first two otherwise 3 pieces would be "touching".
                            The same is verified if the last two elements are the same.
 */
-checkLastLink([H1, H2 | Tail]) :- list_nth(23, [H1, H2 | Tail], Last), ((H1 =\= H2);(H1 =:= H2, H1 =\= Last, H2 =\= Last)),
+check_last_link([H1, H2 | Tail]) :- list_nth(23, [H1, H2 | Tail], Last), ((H1 =\= H2);(H1 =:= H2, H1 =\= Last, H2 =\= Last)),
                    list_nth(22, [H1, H2 | Tail], SencondLast), ((Last =\= SencondLast);(Last =:= SencondLast, H1 =\= Last)).
 
 /*
-    validatePieces(+PieceArrangementList)
+    validate_pieces(+PieceArrangementList)
 
     This predicate checks if a given arrangement of marbles is valid or not. It uses the following predicates to check:
-    - validateWhites
-    - validateBlacks
-    - checkLastLink
+    - validate_whites
+    - validate_blacks
+    - check_last_link
 */
-validatePieces([H1, H2 | Tail]) :- validateWhites([H1, H2 | Tail], 0), validateBlacks([H1, H2 | Tail], 0), checkLastLink([H1, H2 | Tail]).
+validate_pieces([H1, H2 | Tail]) :- validate_whites([H1, H2 | Tail], 0), validate_blacks([H1, H2 | Tail], 0), check_last_link([H1, H2 | Tail]).
 
 /*
-    generateList(+Size, -Res, +GenWhite)
+    generate_list(+Size, -Res, +GenWhite)
 
     Generates the marbles to place around the Mabula Board.
     Also ensures that in each list there are no more than 2 consecutive elements of the same color. 
     This validation has to be done in the end too, for when we connect the beginning of the piece list to its end (not done in this predicate).
 */
-generateList(24, [], _) :- !.
-generateList(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
+generate_list(24, [], _) :- !.
+generate_list(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
                                      repeat,
                                      random(1, 3, RandValue), % At max 2 pieces of the same color can be connected in the beginning.
                                      NextSize is Size + RandValue,
                                      NextSize =< 24, !,
                                      replicate(RandValue, 1, WhitePiecesLists),
                                      sw_bool_value(GenWhite, GenBlack),
-                                     generateList(NextSize, ResTail, GenBlack),
+                                     generate_list(NextSize, ResTail, GenBlack),
                                      append(WhitePiecesLists, ResTail, Res);
 
                                      sw_bool_value(GenWhite, GenBlack), % Generate black pieces
@@ -135,7 +132,7 @@ generateList(Size, Res, GenWhite) :- GenWhite, % Generate white pieces
                                      NextSize is Size + RandValue,
                                      NextSize =< 24, !,
                                      replicate(RandValue, 0, BlackPiecesList),
-                                     generateList(NextSize, ResTail, GenBlack),
+                                     generate_list(NextSize, ResTail, GenBlack),
                                      append(BlackPiecesList, ResTail, Res).
 
 /*

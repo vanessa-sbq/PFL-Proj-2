@@ -76,13 +76,13 @@ replace_last([X], B, [B]) :- !.
 replace_last([H|T], B, [H|NewList]) :- replace_last(T, B, NewList).
 
 /*
-    Helper function for partitionList
+    Helper function for partition_list
     Extracts the elements from a List and creates a new sublist (Partition).
 */
-partitionListHelper(0, NewList, NewList, []) :- !.
-partitionListHelper(PartitionSize, [H|T], NewList, NewParttion) :- PartitionSize > 0,
+partition_list_helper(0, NewList, NewList, []) :- !.
+partition_list_helper(PartitionSize, [H|T], NewList, NewParttion) :- PartitionSize > 0,
                                                                    PartitionSize1 is PartitionSize - 1,
-                                                                   partitionListHelper(PartitionSize1, T, NewList, NewPartitionTail),
+                                                                   partition_list_helper(PartitionSize1, T, NewList, NewPartitionTail),
                                                                    NewParttion = [H|NewPartitionTail].
 
 /*
@@ -90,19 +90,19 @@ partitionListHelper(PartitionSize, [H|T], NewList, NewParttion) :- PartitionSize
     Helps with the partition of a List. NumberOfPartitions * PartitionSize must be the same as the total elements inside that List. The partitions will
     get outputed inside the Res variable as a list of lists.
 */
-partitionList([], 0, _, []).
-partitionList(List, NumberOfPartitions, PartitionSize, Res) :- partitionListHelper(PartitionSize, List, NewList, NewParttion),
+partition_list([], 0, _, []).
+partition_list(List, NumberOfPartitions, PartitionSize, Res) :- partition_list_helper(PartitionSize, List, NewList, NewParttion),
                                                                NumberOfPartitions1 is NumberOfPartitions - 1,
-                                                               partitionList(NewList, NumberOfPartitions1, PartitionSize, ResTail),
+                                                               partition_list(NewList, NumberOfPartitions1, PartitionSize, ResTail),
                                                                Res = [NewParttion|ResTail].
 
 /*
     Helper function
     Helps reverse each Row inside the Board.
 */
-reverseColumns([], []).
-reverseColumns([Row|Rows], [RowReverse|ReversedColumnsTail]) :- reverse(Row, RowReverse),
-                                               reverseColumns(Rows, ReversedColumnsTail).
+reverse_columns([], []).
+reverse_columns([Row|Rows], [RowReverse|ReversedColumnsTail]) :- reverse(Row, RowReverse),
+                                               reverse_columns(Rows, ReversedColumnsTail).
 
 /*
     Helper function

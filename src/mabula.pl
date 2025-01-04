@@ -10,7 +10,7 @@
     5. prints to stdout who's playing in this turn.
     6. calls game_cycle/1 where the game's execution continues.
 */
-play_game :- displayOptions(Mode),
+play_game :- display_options(Mode),
              configure_game(Mode, GameConfig),
              initial_state(GameConfig, Board-L1-L2-P1-P2-P1-Color-Level),
              display_game(Board-L1-L2-P1-P2-P1-Color-L1),
@@ -123,7 +123,7 @@ congratulate(1, P1, P2) :- format('Congratulations, ~w won.', [P2]),nl.
 game_over(Board-L1-L2-P1-P2-Player-Color-Level, Winner) :- valid_moves(Board-L1-L2-P1-P2-Player-0-Level, List),
                             valid_moves(Board-L1-L2-P1-P2-Player-1-Level, List2),
                             List == [], List2 == [],
-                            check_max_marbles(Board, Winner).
+                            check_max_marbles(Board-L1-L2-P1-P2-Player-Color-Level, Winner).
 
 /*
     Get the element of the board, given an I and a J.
@@ -149,71 +149,68 @@ get_max_value(Board, Color, Visited, CurrentMax, MaxValue) :-
     length(Board, NumRows),                                                   % Get the number of rows in the board.
     nth1(1, Board, Row), length(Row, NumCols),                                % Get the number of columns by examining the first row.
     findall((I, J), (between(1, NumRows, I), between(1, NumCols, J)), Cells), % Generate all cell coordinates (I, J).
-    get_max_value_helper(Board, Color, Cells, Visited, CurrentMax, MaxValue). % Start recursive helper to find the max value.
+    get_max_value_helper(Board, Color, Cells, CurrentMax, MaxValue). % Start recursive helper to find the max value.
 
 /*
     Helper predicate for get_max_value.
     Recursive predicate to get the maximum size of a color's components.
 */
-get_max_value_helper(_, _, [], _, MaxValue, MaxValue) :- !.                                 % Base case: When there are no cells left, return the current max value.
-get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, MaxValue) :-
-    \+ member((I, J), Visited),                                                             % If the current cell is not visited,
-    get_element(Board, I, J, Color),                                                        % and it matches the specified color,
-    get_component_value(Board, Color, Visited, I, J, 0, ComponentValue),                    % calculate the size of the connected component.
-    NewMax is max(CurrentMax, ComponentValue),                                              % Update the maximum value if the component size is larger.
-    append([(I, J)], Visited, NewVisited),                                                  % Mark the current cell as visited.
-    get_max_value_helper(Board, Color, RestCells, NewVisited, NewMax, MaxValue).            % Continue with the remaining cells.
-get_max_value_helper(Board, Color, [(I, J) | RestCells], Visited, CurrentMax, MaxValue) :-
-    (member((I, J), Visited); \+ get_element(Board, I, J, Color)),                          % Skip cells that are either visited or do not match the color.
-    get_max_value_helper(Board, Color, RestCells, Visited, CurrentMax, MaxValue).           % Continue with the remaining cells.
+get_max_value_helper(_, _, [], MaxValue, MaxValue) :- !.                            % No cells left, return the current max value.
+get_max_value_helper(Board, Color, [(I, J) | RestCells], CurrentMax, MaxValue) :-
+    get_element(Board, I, J, Color),                                                % Check if it matches the specified color
+    bfs_component(Board, Color, (I, J), ComponentValue),                            % Get the ComponentValue with the BFS.
+    NewMax is max(CurrentMax, ComponentValue),                                      % Update the maximum value if the component size is larger.
+    get_max_value_helper(Board, Color, RestCells, NewMax, MaxValue).            % Continue with the remaining cells.
+get_max_value_helper(Board, Color, [(I, J) | RestCells], CurrentMax, MaxValue) :-
+    \+ get_element(Board, I, J, Color),                                            % Skip cells that do not match the color.
+    get_max_value_helper(Board, Color, RestCells, CurrentMax, MaxValue).           % Continue with the remaining cells.
+
+/*
+    % bfs_component(+Board, +Color, +Start, -Visited)
+    Perform BFS to find all connected components of the same color as `Start`.
+*/
+bfs_component(Board, Color, Start, ComponentSize) :-
+    bfs(Board, Color, [Start], [], Visited),
+    length(Visited, ComponentSize).
 
 
 /*
-    % get_component_value(+Board, +Color, +Visited, +I, +J, -Value)
-    Calculate the size of a connected component starting at position (I, J).
+    % bfs(+Board, +Color, +Queue, +VisitedSoFar, -Visited)
+    Helper predicate to perform BFS using a queue.
 */
-get_component_value(Board, Color, Visited, I, J, Acc, Value) :-
-    findall((NI, NJ), 
-            (adjacent(I, J, NI, NJ),                                            % Find all adjacent positions of (I, J),
-             get_element(Board, NI, NJ, ColorOfElem),                           % where the color matches the specified color,
-             \+ member((NI, NJ), Visited),                                      % and the position has not been visited,
-             ColorOfElem == Color), 
-            Neighbors),                                                         % Collect valid neighbors.
-    Acc1 is Acc + 1,                                                            % Increment the accumulator (size of the component).
-    append([(I, J)], Visited, Visited1),                                        % Mark the current position as visited.
-    get_component_value_helper(Board, Color, Neighbors, Visited1, Acc1, Value). % Process the neighbors recursively.
-
-
-/*
-    Helper predicate for get_component_value.
-    Recursively calculates the size of a connected component.
-*/
-get_component_value_helper(_, _, [], _, Acc, Acc) :- !.                                          % Base case: If there are no neighbors, return the accumulated value.
-get_component_value_helper(Board, Color, [(NI, NJ)|RestNeigh], Visited, Acc, Value) :-
-    \+ member((NI, NJ), Visited),                                                                % If the neighbor has not been visited,
-    get_component_value(Board, Color, Visited, NI, NJ, Acc, Value1),                             % calculate its contribution to the component size.
-    get_component_value_helper(Board, Color, RestNeigh, [(NI, NJ) | Visited], Value1, Value), !. % Process the remaining neighbors.
-get_component_value_helper(Board, Color, [_|RestNeigh], Visited, Acc, Value) :-
-    get_component_value_helper(Board, Color, RestNeigh, Visited, Acc, Value).                    % Skip visited neighbors and continue.
+bfs(_, _, [], Visited, Visited) :- !. % No more marbles to visit
+bfs(Board, Color, [(I, J) | RestQueue], VisitedSoFar, Visited) :-
+    \+ member((I, J), VisitedSoFar),               
+    get_element(Board, I, J, Color),              
+    findall((NI, NJ),
+            (adjacent(I, J, NI, NJ),              
+             get_element(Board, NI, NJ, Color),  
+             \+ member((NI, NJ), VisitedSoFar)),
+            Neighbors),
+    append(RestQueue, Neighbors, NewQueue),       
+    append([(I, J)], VisitedSoFar, NewVisited),   
+    bfs(Board, Color, NewQueue, NewVisited, Visited), !. 
+bfs(Board, Color, [_ | RestQueue], VisitedSoFar, Visited) :-
+    bfs(Board, Color, RestQueue, VisitedSoFar, Visited). % Skip already visited nodes.
 
 /*
-    There's mutual recursion happening here (The comments for this function are also located in the pushPieces/4 predicate.)
+    There's mutual recursion happening here (The comments for this function are also located in the push_pieces/4 predicate.)
 */
-pushNextPiece(Row, _, null, Row).                                                                     % Stop if the target position is empty (null)
-pushNextPiece(Row, TargetIndex, NextPiece, NewRow) :- NextTarget is TargetIndex + 1,                  % Determine the next target position
-                                                      pushPieces(Row, NextTarget, NextPiece, NewRow). % Recursively push the next piece
+push_next_piece(Row, _, null, Row).                                                                     % Stop if the target position is empty (null)
+push_next_piece(Row, TargetIndex, NextPiece, NewRow) :- NextTarget is TargetIndex + 1,                  % Determine the next target position
+                                                      push_pieces(Row, NextTarget, NextPiece, NewRow). % Recursively push the next piece
 
 /*
     This function allows us to push pieces.
      - We first gather the element that is inside the position that we want to place our new piece (NextPiece).
      - Then we call replace which replaces the old piece (NextPiece) pointed by the target index (TargetIndex) by the new piece (Piece).
-     - And to make sure we are pushing the old marble (NextPiece) we call pushNextPiece which does the following:
+     - And to make sure we are pushing the old marble (NextPiece) we call push_next_piece which does the following:
         - If the old piece was null TempRow will be the same as Row because the old marble didn't actually exist (null value found). (base case)
         - Or pushes any other pieces using this function until a null value is found. (recursive step)
 */
-pushPieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece),  % Get the current piece at TargetIndex
+push_pieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece),  % Get the current piece at TargetIndex
                                                replace(Row, TargetIndex, NextPiece, Piece, TempRow), % Place the new piece at TargetIndex
-                                               pushNextPiece(TempRow, TargetIndex, NextPiece, NewRow).
+                                               push_next_piece(TempRow, TargetIndex, NextPiece, NewRow).
 
 
 /*
@@ -226,16 +223,16 @@ pushPieces(Row, TargetIndex, Piece, NewRow) :- nth0(TargetIndex, Row, NextPiece)
     The Recursive step:
         - We first calculate the target index (TargetIndex) which is a combination of the CurrentIndex of the marble plus one (step-by-step).
         - Then we retrive the piece that we want to move and check if it isn't a null piece.
-        - After this we call pushPieces which moves any potential pieces that are inside the target index so that we can free up the target index
+        - After this we call push_pieces which moves any potential pieces that are inside the target index so that we can free up the target index
           for the piece we are trying to move.
         - After the call is done we just replace the element located at original index by null since we already moved the piece and the one that
           is inside the place pointed by CurrentIndex is just a ghost marble.
 */
-movePiece(Row, CurrentIndex, 0, Row).
-movePiece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + Distance,
+move_piece(Row, CurrentIndex, 0, Row).
+move_piece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + Distance,
                                                   nth0(CurrentIndex, Row, Piece), % Get the piece at CurrentIndex
-                                                  Piece \== null,                 % Ensure we are moving a valid piece % FIXME: \= or \==
-                                                  pushPieces(Row, TargetIndex, Piece, TempNewRow), !, % Push pieces as needed
+                                                  Piece \== null,                 % Ensure we are moving a valid piece
+                                                  push_pieces(Row, TargetIndex, Piece, TempNewRow), !, % Push pieces as needed
                                                   replace(TempNewRow, CurrentIndex, Piece, null, NewRow).
 
 /*
@@ -243,58 +240,57 @@ movePiece(Row, CurrentIndex, Distance, NewRow) :- TargetIndex is CurrentIndex + 
     It consists of two cases:
 
     The Base Case:
-       If the distance is zero then we return the Row with no modifications. %TODO: check the FIXME:
+       If the distance is zero then we return the Row with no modifications.
 
     The Recursive Step:
        To move a piece by a non-zero distance, the game rules require moving it step by step 
        rather than picking the marble up and placing it at the final destination. 
        - First, the function extracts the target row (RowToEdit) from the board.
-       - Then, it calls movePiece to shift the piece at InitialIndex by one position to the left,
+       - Then, it calls move_piece to shift the piece at InitialIndex by one position to the left,
          resulting in a temporary row (TempRow) with this single move performed.
-       - After updating the row, the function recursively calls moveRowPieces to continue moving
+       - After updating the row, the function recursively calls move_row_pieces to continue moving
          the piece until the desired distance is covered. For each recursive step:
          - We decrement the distance to travel (DistanceToTravel) by one.
-         - We increment the index of the piece to be moved (InitialIndex) because it has been shifted when we called movePiece.
+         - We increment the index of the piece to be moved (InitialIndex) because it has been shifted when we called move_piece.
          - We update the original row in the board row by the new temporary row (TempRow) which crates the new board (NewBoard).
 
     This process repeats until the distance to travel reaches zero, at which point the updated row is returned.
 */
-moveRowPieces(Board, RowIndex, InitialIndex, 0, NewRow) :- nth0(RowIndex, Board, RowToEdit),
-                                                           movePiece(RowToEdit, InitialIndex, 0, NewRow). % FIXME: Is this really necessary ?
-moveRowPieces(Board, RowIndex, InitialIndex, DistanceToTravel, NewRow) :- nth0(RowIndex, Board, RowToEdit),
-                                                            movePiece(RowToEdit, InitialIndex, 1, TempRow), % We want to move piece with index 0 to index Distance.         
+move_row_pieces(Board, RowIndex, InitialIndex, 0, NewRow) :- nth0(RowIndex, Board, NewRow).
+move_row_pieces(Board, RowIndex, InitialIndex, DistanceToTravel, NewRow) :- nth0(RowIndex, Board, RowToEdit),
+                                                            move_piece(RowToEdit, InitialIndex, 1, TempRow), % We want to move piece with index 0 to index Distance.         
                                                             NextDistanceToTravel is DistanceToTravel - 1,
                                                             NextIndex is InitialIndex + 1,
                                                             replace(Board, RowIndex, RowToEdit, TempRow, NewBoard),
-                                                            moveRowPieces(NewBoard, RowIndex, NextIndex, NextDistanceToTravel, NewRow), !.
+                                                            move_row_pieces(NewBoard, RowIndex, NextIndex, NextDistanceToTravel, NewRow), !.
 
 
 /*
     Case where the move originated from the right slice.
     Moves from the top slice originate from index 0.
     Since the element is already in the Top side of the Row we need to transpose the Board so that a column now becomes a Row.
-    After this we can call moveRowPieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
+    After this we can call move_row_pieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
     Then we replace the Old Row by the Newly created Row and reverse the Row again. This last step also creates the NewBoard.
 */
-applyMove(0-OldJ-Distance, Board, NewBoard) :- transpose(Board, Columns),
-                                               moveRowPieces(Columns, OldJ, 0, Distance, NewRow),
+apply_move(0-OldJ-Distance, Board, NewBoard) :- transpose(Board, Columns),
+                                               move_row_pieces(Columns, OldJ, 0, Distance, NewRow),
                                                nth0(OldJ, Columns, OldRow),
                                                replace(Columns, OldJ, OldRow, NewRow, CascadedColumns),
-                                               transpose(CascadedColumns, NewBoard). %, print(NewBoard). %TODO: remove
+                                               transpose(CascadedColumns, NewBoard).
 
 /*
     Case where the move originated from the right slice.
     Moves from the bottom slice originate from max index.
     Since the element is already in the Bottom side of the Row we need to reverse the Board so the Bottom side now becomes the Top side and then
-    transpose the Board so that a column now becomes a Row. After this we can call moveRowPieces which moves the piece at
+    transpose the Board so that a column now becomes a Row. After this we can call move_row_pieces which moves the piece at
     index 0 of the corresponding Row to the next position at index + Distance.
     Then we replace the Old Row by the Newly created Row and reverse the Row again. This last step also creates the NewBoard.
 */
-applyMove(MaxIndex-OldJ-Distance, Board, NewBoard) :- length(Board, BoardSize),
+apply_move(MaxIndex-OldJ-Distance, Board, NewBoard) :- length(Board, BoardSize),
                                                       MaxIndex is BoardSize - 1,
                                                       reverse(Board, UpsideDownBoard),
                                                       transpose(UpsideDownBoard, Columns),
-                                                      moveRowPieces(Columns, OldJ, 0, Distance, NewRow),
+                                                      move_row_pieces(Columns, OldJ, 0, Distance, NewRow),
                                                       nth0(OldJ, Columns, OldRow),
                                                       replace(Columns, OldJ, OldRow, NewRow, CascadedColumns),
                                                       transpose(CascadedColumns, NewUpsideDownBoard),
@@ -305,11 +301,11 @@ applyMove(MaxIndex-OldJ-Distance, Board, NewBoard) :- length(Board, BoardSize),
     Case where the move originated from the right slice.
     Moves from the left slice originate from row index 0.
     Since the element is already in the left side of the Row we do not need to apply any transformation to the board and we can just call
-    moveRowPieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
+    move_row_pieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
     Then we replace the Old Row by the Newly created Row and reverse the Row again. This last step also creates the NewBoard.
 */
-applyMove(MiddleSliceIndex-0-Distance, Board, NewBoard) :- length(Board, BoardSize),
-                                                           moveRowPieces(Board, MiddleSliceIndex, 0, Distance, NewRow),
+apply_move(MiddleSliceIndex-0-Distance, Board, NewBoard) :- length(Board, BoardSize),
+                                                           move_row_pieces(Board, MiddleSliceIndex, 0, Distance, NewRow),
                                                            nth0(MiddleSliceIndex, Board, OldRow),
                                                            replace(Board, MiddleSliceIndex, OldRow, NewRow, NewBoard).
 
@@ -317,52 +313,56 @@ applyMove(MiddleSliceIndex-0-Distance, Board, NewBoard) :- length(Board, BoardSi
 /*
     Case where the move originated from the right slice.
     Moves from the right slice originate from max row index.
-    To use the moveRowPieces we need to invert each Row of the Board. This is done by the reverseColumns/2 predicate.
-    After this is done we can call moveRowPieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
+    To use the move_row_pieces we need to invert each Row of the Board. This is done by the reverse_columns/2 predicate.
+    After this is done we can call move_row_pieces which moves the piece at index 0 of the corresponding Row to the next position at index + Distance.
     Then we replace the Old Row by the Newly created Row and reverse the Row again. This last step also creates the NewBoard.
 */
-applyMove(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, BoardSize),
-                                                                  reverseColumns(Board, BoardRowReversed),
-                                                                  moveRowPieces(BoardRowReversed, MiddleSliceIndex, 0, Distance, NewRow),
+apply_move(MiddleSliceIndex-MaxIndex-Distance, Board, NewBoard) :- length(Board, BoardSize),
+                                                                  reverse_columns(Board, BoardRowReversed),
+                                                                  move_row_pieces(BoardRowReversed, MiddleSliceIndex, 0, Distance, NewRow),
                                                                   nth0(MiddleSliceIndex, BoardRowReversed, OldRow),
                                                                   replace(BoardRowReversed, MiddleSliceIndex, OldRow, NewRow, NewBoardRowReversed),
-                                                                  reverseColumns(NewBoardRowReversed, NewBoard).
+                                                                  reverse_columns(NewBoardRowReversed, NewBoard).
 
 /*
     Helper Function
     This function has 3 cases.
     The first one represents the case where a player does not want to play. It the move provided is -1-(-1)-(-1) then this case gets executed and returns the board exactly has before.
     The second one represents the move predicate for human players. If level is 0 then we are performing a validation on the move first and only then we apply it.
-    The third one represent the move predicate for non human players (Ai). This only calls applyMove as the moves that the Ai players execute come from the list returned by the valid_moves predicate.
+    The third one represent the move predicate for non human players (Ai). This only calls apply_move as the moves that the Ai players execute come from the list returned by the valid_moves predicate.
 */
 move(Board-L1-L2-P1-P2-Player-Color-Level, -1-(-1)-(-1), Board) :- !.
 move(Board-L1-L2-P1-P2-Player-Color-0, OldI-OldJ-Distance, NewBoard) :- 
                                                           length(Board, N),
-                                                          is_valid_move(Board, N, Color, OldI-OldJ-Distance),  % FIXME: An invalid move crashes the game %FIXME: Cut here ?
-                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
-move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- Level =\= 0,%valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
-                                                          %member(OldI-OldJ-Distance, PossibleMoves),
-                                                          applyMove(OldI-OldJ-Distance, Board, NewBoard), !.
+                                                          is_valid_move(Board, N, Color, OldI-OldJ-Distance),
+                                                          apply_move(OldI-OldJ-Distance, Board, NewBoard), !.
+move(Board-L1-L2-P1-P2-Player-Color-Level, OldI-OldJ-Distance, NewBoard) :- Level =\= 0,
+                                                          apply_move(OldI-OldJ-Distance, Board, NewBoard), !.
 
 /*
-    Helper function
-    Uses the get_max_value_of_board
+    Helper predicate
+    Uses value/3
 */
-check_max_marbles(Board, WinnerColor) :- get_max_value_of_board(0, Board, MaxBlackValue),
-                                         get_max_value_of_board(1, Board, MaxWhiteValue),
+check_max_marbles(Board-L1-L2-P1-P2-Player-Color-Level, WinnerColor) :- 
+                                         value(Board-L1-L2-P1-P2-Player-0-Level, P1, MaxBlackValue), 
+                                         value(Board-L1-L2-P1-P2-Player-1-Level, P2, MaxWhiteValue),
                                          ((MaxBlackValue =:= MaxWhiteValue, WinnerColor = -1);(max(MaxBlackValue, MaxWhiteValue, MaxBlackValue), WinnerColor = 0); WinnerColor = 1).
 
 /*
     Wrapper Function
     Allows maplist to work properlly.
 */
-apply_move_to_board(Board, Move, NewBoard) :- applyMove(Move, Board, NewBoard).
+apply_move_to_board(Board, Move, NewBoard) :- apply_move(Move, Board, NewBoard).
 
 /*
-    Wrapper Function
-    Allows maplist to work properlly.
+    Returns a value measuring how good or bad the current game state is.
 */
-get_max_value_of_board(Color, Board, MaxValue) :- get_max_value(Board, Color, [], 0, MaxValue).
+value(Board-L1-L2-P1-P2-Player-Color-Level, PlayerToCheck, MaxValue) :- get_max_value(Board, Color, [], 0, MaxValue).
+
+/*
+    Wrapper for value to use with maplist
+*/
+wrapper_value(Board-L1-L2-P1-P2-Player-Color-Level, NewBoard, MaxValue) :- value(NewBoard-L1-L2-P1-P2-Player-Color-Level, Player, MaxValue).
 
 /*
     Helper function.
@@ -376,12 +376,13 @@ get_max_value_of_board(Color, Board, MaxValue) :- get_max_value(Board, Color, []
         5. The index that was obtained gives us the max value position but it also gives the move position that created the board which contains the max value.
            So we get the Move by indexing into AllValidMoves with this index.
 */
-get_best_move(Board-Color, [], -1-(-1)-(-1)).
-get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(Board), AllValidMoves, NewBoards),
-                                                   maplist(get_max_value_of_board(Color), NewBoards, MaxValues),
+get_best_move(Board-L1-L2-P1-P2-Player-Color-Level, [], -1-(-1)-(-1)).
+get_best_move(Board-L1-L2-P1-P2-Player-Color-Level, AllValidMoves, Move) :- 
+                                                   maplist(apply_move_to_board(Board), AllValidMoves, NewBoards),
+                                                   maplist(wrapper_value(Board-L1-L2-P1-P2-Player-Color-Level), NewBoards, MaxValues),
                                                    get_max_values_indexes(MaxValues, MaxValueIndexes),
                                                    random_member(Index, MaxValueIndexes),
-                                                   nth0(Index, AllValidMoves, Move).%, write(Index). % TODO: remove
+                                                   nth0(Index, AllValidMoves, Move).
 
 /*
     choose_move(GameState-Player-Color, Level, Move)
@@ -399,9 +400,8 @@ get_best_move(Board-Color, AllValidMoves, Move) :- maplist(apply_move_to_board(B
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 1, Move) :- valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
                                             ((PossibleMoves \== [], random_member(Move, PossibleMoves)); (Move = -1-(-1)-(-1))), !.
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 2, Move) :- 
-                                            %format('It`s ~w`s turn!', [Player]), nl,nl,
                                             valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves),
-                                            get_best_move(Board-Color, PossibleMoves, Move), !.
+                                            get_best_move(Board-L1-L2-P1-P2-Player-Color-Level, PossibleMoves, Move), !.
 choose_move(Board-L1-L2-P1-P2-Player-Color-Level, 0, I-J-Distance) :- length(Board, BoardSize),
                                                     write('Use -1 -1 -1 to skip this round.'),nl,
                                                     ((Color =:= 0, ColorName = black);(ColorName = white)), !,
@@ -433,16 +433,16 @@ valid_moves(Board-L1-L2-P1-P2-Player-Color-Level, ListOfMoves) :-
     and say that the move I-J-Distance is invalid otherwise, we move on.
     Now that we know that the element is the correct color we still need to check if the move is valid. For this we use 4 conditions.
     With the help of the predicates is_top_edge/1, is_right_edge/2, is_bottom_edge/2 and is_left_edge/1 we check where the move originated from, perform the move
-    with applyMove and check if this move is valid by using the valid_move/3 predicate.
+    with apply_move and check if this move is valid by using the valid_move/3 predicate.
 */
 is_valid_move(BoardBefore, N, Color, I-J-Distance) :-
     MaxIndex is N - 1,
     get_element(BoardBefore, I, J, Color),
     (
-        (is_top_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(bottom, BoardBefore, BoardAfter));
-        (is_right_edge(I-J-Distance, MaxIndex), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(left, BoardBefore, BoardAfter));
-        (is_bottom_edge(I-J-Distance, MaxIndex), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
-        (is_left_edge(I-J-Distance), applyMove(I-J-Distance, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
+        (is_top_edge(I-J-Distance), apply_move(I-J-Distance, BoardBefore, BoardAfter), valid_move(bottom, BoardBefore, BoardAfter));
+        (is_right_edge(I-J-Distance, MaxIndex), apply_move(I-J-Distance, BoardBefore, BoardAfter), valid_move(left, BoardBefore, BoardAfter));
+        (is_bottom_edge(I-J-Distance, MaxIndex), apply_move(I-J-Distance, BoardBefore, BoardAfter), valid_move(top, BoardBefore, BoardAfter));
+        (is_left_edge(I-J-Distance), apply_move(I-J-Distance, BoardBefore, BoardAfter), valid_move(right, BoardBefore, BoardAfter))
     ), !.
 
 /*
@@ -561,29 +561,29 @@ get_edge_marbles(Board, CurrentPlayer, EdgeMarblesPos) :-
     Helper function
     Creates all possible indexes for the top slice of a board of size N.
 */
-createTopIndex(0, []).
-createTopIndex(MaxIndex, [(0,MaxIndex)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createTopIndex(MaxIndex1, ResTail).
+create_top_index(0, []).
+create_top_index(MaxIndex, [(0,MaxIndex)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, create_top_index(MaxIndex1, ResTail).
 
 /*
     Helper function
     Creates all possible indexes for the bottom slice of a board of size N.
 */
-createBottomIndex(_, 0, []).
-createBottomIndex(Row, MaxIndex, [(Row, MaxIndex)|ResTail]) :- Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createBottomIndex(Row, MaxIndex1, ResTail).
+create_bottom_index(_, 0, []).
+create_bottom_index(Row, MaxIndex, [(Row, MaxIndex)|ResTail]) :- Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, create_bottom_index(Row, MaxIndex1, ResTail).
 
 /*
     Helper function
     Creates all possible indexes for the left slice of a board of size N.
 */
-createLeftIndex(0, []).
-createLeftIndex(MaxIndex, [(MaxIndex, 0)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createLeftIndex(MaxIndex1, ResTail).
+create_left_index(0, []).
+create_left_index(MaxIndex, [(MaxIndex, 0)|ResTail]) :- MaxIndex > 0, MaxIndex1 is MaxIndex - 1, create_left_index(MaxIndex1, ResTail).
 
 /*
     Helper function
     Creates all possible indexes for the right slice of a board of size N.
 */
-createRightIndex(_, 0, []).
-createRightIndex(Row, MaxIndex, [(MaxIndex, Row)|ResTail]) :-  Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, createRightIndex(Row, MaxIndex1, ResTail).
+create_right_index(_, 0, []).
+create_right_index(Row, MaxIndex, [(MaxIndex, Row)|ResTail]) :-  Row > 0, MaxIndex > 0, MaxIndex1 is MaxIndex - 1, create_right_index(Row, MaxIndex1, ResTail).
 
 /*
     edge_positions(+Board, -EdgePositions)
@@ -593,8 +593,8 @@ createRightIndex(Row, MaxIndex, [(MaxIndex, Row)|ResTail]) :-  Row > 0, MaxIndex
 edge_positions(Board, EdgePositions) :-
     length(Board, N), % Get the number of rows
     MaxIndex is N - 1,  % Calculate maximum row index
-    createTopIndex(MaxIndex, TopEdges),
-    createBottomIndex(MaxIndex, MaxIndex, BottomEdges),
-    createLeftIndex(MaxIndex, LeftEdges),
-    createRightIndex(MaxIndex, MaxIndex, RightEdges),
+    create_top_index(MaxIndex, TopEdges),
+    create_bottom_index(MaxIndex, MaxIndex, BottomEdges),
+    create_left_index(MaxIndex, LeftEdges),
+    create_right_index(MaxIndex, MaxIndex, RightEdges),
     append([TopEdges, BottomEdges, LeftEdges, RightEdges], EdgePositions).
