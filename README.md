@@ -81,7 +81,9 @@ If the beginning the **Board** variable may hold a list of lists (matrix) that l
 
 and looks something like this when we use the ``display_game/2`` predicate:
 
-![Initial Board Image](images/InitialBoard.png)
+<div style="text-align: center;">
+    <img src="images/InitialBoard.png" alt="Initial Board Image" style="width: 300px; height: auto;" />
+</div>
 
 #### Middle
 
@@ -100,7 +102,9 @@ In the middle of the game the **Board** variable may look something like:
 
 and looks something like this when we use the ``display_game/2`` predicate:
 
-![Middle Board Image](images/MiddleBoard.png)
+<div style="text-align: center;">
+    <img src="images/MiddleBoard.png" alt="Middle Board Image" style="width: 300px; height: auto;" />
+</div>
 
 #### End
 
@@ -119,7 +123,9 @@ In the end of the game the **Board** variable may look like:
 
 and look something like this when we use the ``display_game/2`` predicate:
 
-![End Board Image](images/EndBoard.png)
+<div style="text-align: center;">
+    <img src="images/EndBoard.png" alt="End Board Image" style="width: 300px; height: auto;" />
+</div>
 
 - **P1**:
     - This variable gets unified with the player that is currently playing as Player1. In the next game loop the variable will be P2 instead of P1.
@@ -140,7 +146,9 @@ The **Distance** variable is the only variable out of these 3 that contains the 
 
 To better understand this predicate we provide this example below:
 
-![Initial Board Image](images/InitialBoard.png)
+<div style="text-align: center;">
+    <img src="images/InitialBoard.png" alt="Initial Board Image" style="width: 300px; height: auto;" />
+</div>
 
 Say we want to move the White Piece that is in the slot (8, 2).
 Our board matrix index for that slot would be (0, 1).
@@ -165,28 +173,36 @@ The human interactions / menus and a brief description of each one is provided b
 
 - Main Menu
 
-![Main Menu Image](images/mainMenu.png) 
+<div style="text-align: center;">
+    <img src="images/mainMenu.png" alt="Main Menu Image" style="width: 300px; height: auto;" />
+</div>
 
 The main menu shows the available options to the user and asks the user to choose one of them.
 If the input is incorrect (e.g. the user inputs 4, a string or a character) the program asks for an input again.
 
 - Player Greeting and Information Retreival
 
-![Player Greeting and Information Retreival Image](images/playerGreetingInteraction.png)
+<div style="text-align: center;">
+    <img src="images/playerGreetingInteraction.png" alt="Player Greeting Interaction Image" style="width: 300px; height: auto;" />
+</div>
 
 This interaction allows the user to input it's name so that he can easily see when its his turn in the game.
 Strings with uppercase values are allowed here.
 
 - CPU Level Choice Screen
 
-![CPU Level Choice Screen Image](images/CPULevelInteraction.png)
+<div style="text-align: center;">
+    <img src="images/CPULevelInteraction.png" alt="CPU Level Interaction Image" style="width: 300px; height: auto;" />
+</div>
 
 In this menu the user is greeted with 2 levels of AI. He must choose one of them.
 If the user accidently types a wrong value the same question will be asked again.
 
 - Player's Turn Screen
 
-![Players Turn Interaction Image](images/playerTurnInteraction.png)
+<div style="text-align: center;">
+    <img src="images/playerTurnInteraction.png" alt="Player Turn Interaction Image" style="width: 300px; height: auto;" />
+</div>
 
 When playing as a Human we need to be able to give values that point to the marble we want to move. This is done in this screen.
 If the user types a wrong value he will be asked to input a new value.
