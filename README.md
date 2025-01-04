@@ -9,13 +9,13 @@ Made by:
 
 ## Installation
 
-To play Mabula you'll need to have SICStus Prolog.
+In order to play Mabula you will need to have SICStus Prolog.
 
 To execute on Linux, Windows or macOS do the following:
 
-1. Copy game.pl file's path.
-2. Inside the SICStus Prolog terminal window run the command ```consult('<game.pl file's path>').```.
-3. After you're ready to play the game, just run in SICStus Prolog's terminal window ```play.```.
+1. Copy **game.pl** file's path.
+2. Inside the SICStus Prolog terminal window run the command ```consult('<game.pl file path>').```.
+3. To start the game, run ```play.``` in SICStus Prolog's terminal window.
 
 ## Description
 
@@ -23,11 +23,9 @@ The Mabula board game (computer version) is a game for 2 players.
 
 The main objective of the game is to connect as many of a player's marbles as possible.
 
-In the begining of the game all marbles are at the edge of the board (except the four corners).
+Initially, 24 marbles (12 black marbles and 12 white marbles) are placed randomly along the perimeter of the board. Marbles cannot occupy the corner spaces, and no more than two marbles of the same color may be placed next to each other, even if the sequence wraps around a corner.
 
-Each player is then responsible for moving their marbles (Each color represent a player) but there's a catch... you can only move marbles that are at the edge of the square and also a player's move may push other marbles even if they are of different colors.
-
-Finally, the winner is the largest, unicolour group.
+Each player takes turns moving a marble of their color from the perimeter. A marble can be pushed as far as desired and may push other marbles along with it, provided the move is valid. Once a marble has left the perimeter, it cannot be pushed back onto it. The game ends when neither player has any valid moves remaining. The winner is the player whose marbles form the largest contiguous group of the same color.
 
 A good video explanation is provided [here](https://www.youtube.com/watch?v=FCLpHHBHZRI&t=1s).
 
@@ -36,34 +34,34 @@ A good rule book is provided by **Steffen Spiele** and is located [here](https:/
 ## Game Logic
 ### Game Configuration Representation
 
-When we first call the play our game starts by calling configure_game which depending on the mode chosen by the player will create a GameConfig which is a tuple that has the following values:
+When we first call ``play`` our game starts by calling ``configure_game`` which, depending on the mode chosen by the player, will create a **GameConfig** which has the following values:
 
-- L1: Level for Player 1;
-- L2: Level for Player 2;
-- P1: Name of Player 1;
-- P2: Name of Player 2.
+- **L1**: Level for Player 1;
+- **L2**: Level for Player 2;
+- **P1**: Name of Player 1;
+- **P2**: Name of Player 2.
 
-The variables L1 and L2 can have the following values:
+The variables **L1** and **L2** can have the following values:
 
-- 0 if the corresponding Player is a Human.
+- **0** if the corresponding Player is a Human.
 
-- 1 if the corresponding Player is an Ai Bot of Level 1 (Chooses a valid move randomly).
+- **1** if the corresponding Player is a Level 1 Bot (Chooses a valid move randomly).
 
-- 2 if the corresponding Player is an Ai Bot of Level 2 (Uses a greedy algorithm to choose a valid move).
+- **2** if the corresponding Player is a Level 2 Bot (Uses a greedy algorithm to choose a valid move).
 
-After this predicate is done we call the **initial_state/2** predicate which is used to prepare the call to game_cycle. This predicate receives the previously created GameConfig and after creating a **board** by calling the **construct_board/1** predicate we return a new tuple, Board-L1-L2-P1-P2-P1-0-L1, which is the GameState.
+After returning from ``configure_game``, we call the ``initial_state/2`` predicate which is used to prepare the call to ``game_cycle``. This predicate receives the previously created **GameConfig** and, after creating a **board** by calling the ``construct_board/1`` predicate, it returns a **GameState** (initially, **Board-L1-L2-P1-P2-P1-0-L1**).
 
-This new Tuple now contains 4 new variables:
+**GameState** now contains 4 new variables:
 
-- Board
-    - This is the actual Mabula Board. It is a Matrix that has size N*N and in the begining has marbles only at the edges (We decided that Black marbles woule be represented by a 0 and White marbles by a 1) and null values in every other place.
-    - The Matrix has N lists where the first and last ones represent the top and the bottom of the Board and the begining and end of every other list (middle section) are the representation of the left and right side.
+- **Board**:
+    - This is the actual Mabula Board. It is a Matrix that has size N*N and in the beginning has marbles only at the perimeter (We decided that black marbles woule be represented by a 0 and white marbles by a 1) and null values in every other place.
+    - The Matrix has N lists where the first and last ones represent the top and the bottom of the Board and the beginning and end of every other list (middle section) are the representation of the left and right side.
     - To help visualize this variable we provide a couple of examples:
     
 ### Board Examples
 
-#### Begining
-If the begining the Board variable may hold a list of lists (matrix) that looks something like this:
+#### Beginning
+If the beginning the **Board** variable may hold a list of lists (matrix) that looks something like this:
 
 ```prolog
 [[null,  1  ,  1  ,  0  ,  1  ,  0  ,  1  , null],
@@ -76,13 +74,13 @@ If the begining the Board variable may hold a list of lists (matrix) that looks 
 [ null,  1  ,  1  ,  0  ,  1  ,  0  ,  1  , null]]
 ```
 
-and looks something like this when we use the **display_game/2** predicate:
+and looks something like this when we use the ``display_game/2`` predicate:
 
 ![Initial Board Image](images/InitialBoard.png)
 
 #### Middle
 
-In the middle of the game the Board variable may look something like:
+In the middle of the game the **Board** variable may look something like:
 
 ```prolog
 [[null,  1  , null, null,  1  ,  0  ,  1  , null],
@@ -95,13 +93,13 @@ In the middle of the game the Board variable may look something like:
 [ null, null, null, null, null, null,  1  , null]]
 ```
 
-and looks something like this when we use the **display_game/2** predicate:
+and looks something like this when we use the ``display_game/2`` predicate:
 
 ![Middle Board Image](images/MiddleBoard.png)
 
 #### End
 
-In the end of the game the Board variable may look like:
+In the end of the game the **Board** variable may look like:
 
 ```prolog
 [[null, null, null, null, null, null, null, null],
@@ -114,26 +112,26 @@ In the end of the game the Board variable may look like:
 [ null, null, null, null, null, null, null, null]]
 ```
 
-and look something like this when we use the **display_game/2** predicate:
+and look something like this when we use the ``display_game/2`` predicate:
 
 ![End Board Image](images/EndBoard.png)
 
-- P1
+- **P1**:
     - This variable gets unified with the player that is currently playing as Player1. In the next game loop the variable will be P2 instead of P1.
 
-- Color
-    - Because each player is associated with a color our implementation makes player1 the player that can start and end the movement of black marbles and player 2 the one who can start and end the movement of white marbles.
-    - This variable has two possible values: 0 if the color that the player is allowed to move is Black and 1 if the color that the player is allowed to move is White.
+- **Color**:
+    - Because each player is associated with a color, our implementation makes player1 the player that can start and end the movement of black marbles and player 2 the one who can start and end the movement of white marbles.
+    - This variable has two possible values: **0** if the color that the player is allowed to move is black and **1** if the color that the player is allowed to move is white.
 
-- L1
-    - Just like the second varaible (P1) it gets unified with the level of the player that is currently playing as Player1. In the next game loop the variable will be L2 instead of L1.
+- **L1**:
+    - Just like the second variable (**P1**) it gets unified with the level of the player that is currently playing as Player1. In the next game loop the variable will be **L2** instead of **L1**.
 
 ### Move Representation
 
-Inside the **game_cycle/2** predicate there are also 2 very important predicates that allow a player whether if it is a human or an ai to perfom a move. One of these predicates is **choose_move/3** which depending on the value that is inside the Level variable (which is passed to the predicate) will either ask the human to choose a move or let the artificial inteligence choose a move.
+Inside the ``game_cycle/2`` predicate there are also two very important predicates that allow a player (human or bot) to perfom a move. One of these predicates is ``choose_move/3`` which, depending on the value that is inside the **Level** variable (passed to the predicate), will either ask the human to choose a move or let the bot choose a move.
 
-The internal representation of a move is a tuple that has the format I-J-Distance. 
-The Distance variable is the only variable out of these 3 that contains the original input given by the user while the other two I and J suffer a translation. This translation happens inside the predicate **translate_coords/6** and is necessary because the row value (I) has an offset of N where N is the size of the matrix and the column value (J) has an offset of +1.
+The internal representation has the format **I-J-Distance**. 
+The **Distance** variable is the only variable out of these 3 that contains the original input given by the user while the other two **I** and **J** suffer a translation. This translation happens inside the predicate ``translate_coords/6`` and is necessary because the row value (**I**) has an offset of N where N is the size of the matrix and the column value (**J**) has an offset of +1.
 
 To better understand this predicate we provide this example below:
 
@@ -142,17 +140,17 @@ To better understand this predicate we provide this example below:
 Say we want to move the White Piece that is in the slot (8, 2).
 Our board matrix index for that slot would be (0, 1).
 
-To determine translate between the two we can use (8 - BoardSize, 2 - 1) => (8 - 8, 2 - 1) which will indeed return (8, 1).
+To determine the translation between the two we can use (8 - BoardSize, 2 - 1) => (8 - 8, 2 - 1) which will indeed return (0, 1).
 
-The other predicate is **move/3** where uppon receiving a move it will verify if the move that was chosen is valid by calling the **is_valid_move/4** predicate.
+The other predicate is ``move/3`` where upon receiving a move it will verify if the move that was chosen is valid by calling the ``is_valid_move/4`` predicate.
 
-This predicate will then check from which edge the move originated from and temporarilly perform the move so we can call the **valid_move/3** predicate and check if the board that we created previously is valid or invalid.
+This predicate will then check from which edge the move was originated and temporarily perform the move so we can call the ``valid_move/3`` predicate and check if the board that we created previously is valid or invalid.
 
-After these checks if nothing fails we call the **apply_move/3** predicate which perfoms the move and returns a new board inside NewBoard.
+After these checks if nothing fails we call the ``apply_move/3`` predicate which perfoms the move and returns a new board inside NewBoard.
 
 ### User Interaction
 
-Our game has several menus and interaction.
+Our game has several menus and interactions.
 
 For every input that we receive we validate if we are receiving the expected type (receiving strings when we really want to receive integers), if the integer values are within the range that we specified and always allowing the user to re-input the value.
 
@@ -190,7 +188,8 @@ If the user types a wrong value he will be asked to input a new value.
 
 ## Conclusions
 
-After the development and testing of the game we found no more crashes however, there are still improvements that we should be able to do in the future. One of them is the implementation of a board that can have dynamic size. The other is optimizing the AI side of the game such that when a Computer is put against itself the game takes no longer than 2 minutes (Currently it can take more or less than 2 minutes).
+In conclusion, we managed to implement all of the requested features.
+After the development and testing of the game we found no more issues. However, there are still opportunities for future improvements. One of them is the implementation of a dynamically sized board. The other is optimizing the bot side of the game such that when a Computer is put against itself the game takes no longer than 2 minutes (Currently it can take more or less than 2 minutes).
 
 ## Bibliography
 
